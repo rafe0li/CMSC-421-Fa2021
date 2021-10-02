@@ -42,15 +42,55 @@ void shellLoop() {
 		// Branches to different commands
 		// strcmp returns 0 if the strings are equal
 		if (!strcmp(args[0], LS_CMD)) {
-			ls_Func(".", 0, 0);
+			// Either one arg, just "ls"
+			if (ARG_C == 1) {
+				ls_Func(".", 0, 0);
+			}
+
+			// Or an option is used, -a/-l supported
+			else if (ARG_C == 2) {
+				// Checks if option was selected
+				if (args[1][0] == '-') {
+					int op_a = 0;
+					int op_l = 0;
+					char* p = (char*)(args[1] + 1);
+
+					// Checks which option it was
+					while (*p) {
+						if (*p == 'a') {
+							op_a = 1;
+						}
+						else if (*p == 'l') {
+							op_l = 1;
+						}
+						// User selected unsupported option
+						else {
+							perror("Option not available");
+							exit(EXIT_FAILURE);
+						}
+						p++;
+					}
+					ls_Func(".", op_a, op_l);
+				}
+				else {
+					perror("No options selected or options not available");
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			else {
+				perror("Error with arguments");
+				exit(EXIT_FAILURE);
+			}
 		}
 
-		else if (strcmp(buffer, EXIT_CMD)) {
+		else if (!strcmp(args[0], EXIT_CMD)) {
 			exit_Func();
 		}
 		else {
-			printf("\n simple_shell: %s : command not found", args[0]);
+			printf("\n simple_shell: %s : command not found\n\n", args[0]);
 		}
+		ARG_C = 0;
 		printf("\n");
 	}
 }
@@ -79,6 +119,7 @@ char** parse_Input(char* buff, int size) {
 	while (nextWord != NULL) {
 		arr[row] = nextWord;
 		row++;
+		ARG_C++;
 
 		// Removes newline from last expression
 		if (row == size) {
@@ -146,7 +187,7 @@ int exit_Func(int argc, char* argv[]) {
  */
 int main(int argc, char *argv[]) {
 	if (argc > 1) {
-		fprintf(stderr, "Error: simple_shell cannot be called with any arguments, %d found", argc - 1);
+		fprintf(stderr, "ERROR:\n simple_shell cannot be called with any arguments, %d found \n\n", argc - 1);
 		exit(EXIT_FAILURE);
 	}
 
