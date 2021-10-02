@@ -18,6 +18,9 @@ char* LS_CMD = "ls";
 char* EXIT_CMD = "exit";
 char* ECHO_CMD = "echo";
 char* PROC_CMD = "proc";
+/* How many args the user has entered
+ * Incremented during input parsing
+*/
 int ARG_C = 0;
 
 char** create_Char_Array(int);
@@ -32,6 +35,7 @@ void shellLoop() {
 	buffer = (char*)malloc(buf_size * sizeof(char));
 
 	// Loop that controls shell behavior
+	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
 	while (running) {
 		printf("SSHELL$ ");
 		// Reads in input and parses
@@ -85,8 +89,30 @@ void shellLoop() {
 		}
 
 		else if (!strcmp(args[0], EXIT_CMD)) {
-			exit_Func();
+			if (ARG_C == 1) {
+				exit_Func(0, 0);
+			}
+			else if (ARG_C == 2) {
+				// Stores the argument the user wants to exit with
+				int stat = atoi(args[1]);
+				// atoi returns 0 if the val cannot be parsed
+				if (stat != 0) {
+					exit_Func(stat, 1);
+				}
+				// CASE "exit 0"
+				else if (!strcmp(args[1], "0")) {
+					exit_Func(0, 0);
+				}
+				else {
+					printf("\n ERROR\n Exit code %s is invalid/cannot be parsed\n\n", args[1]);
+				}
+			}
+			else {
+				fprintf(stderr, "\nERROR\n Invalid arguments\n\n");
+				exit(EXIT_FAILURE);
+			}
 		}
+
 		else {
 			printf("\n simple_shell: %s : command not found\n\n", args[0]);
 		}
@@ -177,8 +203,11 @@ void ls_Func(const char *dir, int op_a, int op_l) {
 		printf("\n");
 }
 
-int exit_Func(int argc, char* argv[]) {
-	return EXIT_SUCCESS;
+int exit_Func(int status, int with) {
+	if (with) {
+		exit(status);
+	}
+	exit(EXIT_SUCCESS);
 }
 
 /* argv/argc are how command line args are passed to main 
@@ -187,17 +216,13 @@ int exit_Func(int argc, char* argv[]) {
  */
 int main(int argc, char *argv[]) {
 	if (argc > 1) {
-		fprintf(stderr, "ERROR:\n simple_shell cannot be called with any arguments, %d found \n\n", argc - 1);
+		fprintf(stderr, "ERROR\n simple_shell cannot be called with command line arguments, %d found \n\n", argc - 1);
 		exit(EXIT_FAILURE);
 	}
 
 	shellLoop();
 
 	free(argv);
-	free(LS_CMD);
-	free(EXIT_CMD);
-	free(ECHO_CMD);
-	free(PROC_CMD);
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
