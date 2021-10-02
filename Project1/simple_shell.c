@@ -40,7 +40,8 @@ void shellLoop() {
 		char** args = parse_Input(buffer, size);
 
 		// Branches to different commands
-		if (strcmp(args[1], LS_CMD)) {
+		// strcmp returns 0 if the strings are equal
+		if (!strcmp(args[0], LS_CMD)) {
 			ls_Func(".", 0, 0);
 		}
 
@@ -48,33 +49,48 @@ void shellLoop() {
 			exit_Func();
 		}
 		else {
-			printf("\n simple_shell: : command not found");
+			printf("\n simple_shell: %s : command not found", args[0]);
 		}
+		printf("\n");
 	}
 }
 
 
 /* Separates expressions from user input, stores results
  * into 2D char arrays (essentially array of strings).
+ * WARNING: FUNCTION DOESN'T PARSE THE LAST NEWLINE CHAR CORRECTLY
  * 
  * @param[in] buff Input to parse into command/arguments
  * @return 2D char array of parsed results, empty array for no input
  * 
+ * 
+ * Citations
+ * https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
 */
 char** parse_Input(char* buff, int size) {
-	// Figure out how many rows (args) there are
 	// Allocate memory for a 2D char array, string array in C
 	char** arr = create_Char_Array(size);
-
+	// Takes in a char* once, and then each consecutive call returns
+	// strings delimited by the specified char
 	char* nextWord = strtok(buff, " ");
 	int row = 0;
 	
+	// Loop until no more tokens (spaces) found
 	while (nextWord != NULL) {
 		arr[row] = nextWord;
 		row++;
+
+		// Removes newline from last expression
+		if (row == size) {
+			int len = strlen(nextWord);
+			if (nextWord[len - 1] == '\n') {
+				nextWord[len - 1] = 0;
+			}
+		}
+
 		nextWord = strtok(NULL, " ");
 	}
-	
+
 	return arr;
 }
 
