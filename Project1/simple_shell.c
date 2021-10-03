@@ -26,23 +26,23 @@ int ARG_C = 0;
 char** create_Char_Array(int);
 char** parse_Input(char*, int);
 
-void shellLoop() {
+void shell() {
 	printf("Welcome to simple_shell!\n This C program mimics a shell like Bash.\n Just type in a command to the shell, after $. Have fun!\n\n");
 	bool running = true;
 	// Allocate buffer for user input
 	char* buffer;
 	size_t buf_size = 32;
-	buffer = (char*)malloc(buf_size * sizeof(char));
 
 	// Loop that controls shell behavior
 	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
 	while (running) {
 		printf("SSHELL$ ");
+		buffer = (char*)malloc(buf_size * sizeof(char));
 		// Reads in input and parses
 		getline(&buffer, &buf_size, stdin);
 		int size = count_spaces(buffer);
 		char** args = parse_Input(buffer, size);
-
+		
 		// Branches to different commands
 		// strcmp returns 0 if the strings are equal
 		if (!strcmp(args[0], LS_CMD)) {
@@ -90,6 +90,8 @@ void shellLoop() {
 
 		else if (!strcmp(args[0], EXIT_CMD)) {
 			if (ARG_C == 1) {
+				free(*args);
+				free(args);
 				exit_Func(0, 0);
 			}
 			else if (ARG_C == 2) {
@@ -97,18 +99,22 @@ void shellLoop() {
 				int stat = atoi(args[1]);
 				// atoi returns 0 if the val cannot be parsed
 				if (stat != 0) {
+					free(*args);
+					free(args);
 					exit_Func(stat, 1);
 				}
 				// CASE "exit 0"
 				else if (!strcmp(args[1], "0")) {
+					free(*args);
+					free(args);
 					exit_Func(0, 0);
 				}
 				else {
-					printf("\n ERROR\n Exit code %s is invalid/cannot be parsed\n\n", args[1]);
+					fprintf(stderr, "\n ERROR\nExit code \"%s\" is invalid/cannot be parsed\n\n", args[1]);
 				}
 			}
 			else {
-				fprintf(stderr, "\nERROR\n Invalid arguments\n\n");
+				fprintf(stderr, "\nERROR\nInvalid arguments\n\n");
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -120,7 +126,6 @@ void shellLoop() {
 		printf("\n");
 	}
 }
-
 
 /* Separates expressions from user input, stores results
  * into 2D char arrays (essentially array of strings).
@@ -158,6 +163,8 @@ char** parse_Input(char* buff, int size) {
 		nextWord = strtok(NULL, " ");
 	}
 
+	free(nextWord);
+
 	return arr;
 }
 
@@ -167,11 +174,6 @@ char** create_Char_Array(int m) {
 		arr[i] = (char*)malloc(50);
 	}
 	return arr;
-}
-
-void destroyArray(float** arr) {
-	free(*arr);
-	free(arr);
 }
 
 void ls_Func(const char *dir, int op_a, int op_l) {
@@ -201,6 +203,8 @@ void ls_Func(const char *dir, int op_a, int op_l) {
 	}
 	if (!op_l)
 		printf("\n");
+
+	free(d);
 }
 
 int exit_Func(int status, int with) {
@@ -220,9 +224,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	shellLoop();
-
-	free(argv);
+	shell();
 
 	exit(EXIT_SUCCESS);
 }
