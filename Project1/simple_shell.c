@@ -11,6 +11,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include "simple_shell.h"
 #include "utils.h"
 
 // Globals for matching the user's commands
@@ -23,8 +24,6 @@ char* PROC_CMD = "proc";
 */
 int ARG_C = 0;
 
-char** create_Char_Array(int);
-char** parse_Input(char*, int);
 
 void shell() {
 	printf("Welcome to simple_shell!\n This C program mimics a shell like Bash.\n Just type in a command to the shell, after $. Have fun!\n\n");
