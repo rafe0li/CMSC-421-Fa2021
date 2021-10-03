@@ -1,3 +1,7 @@
+// LS AND EXIT WORKING, ERROR HANDLE WORKING, 1 LEAK
+// BUFFER MOST LIKELY LEAKING
+
+
 /*@simple_shell.c
 * @author Rafael Li, rafaell1@umbc.edu
 * 
