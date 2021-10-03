@@ -27,22 +27,20 @@ int ARG_C = 0;
 
 
 void shell() {
-	printf("Welcome to simple_shell!\n This C program mimics a shell like Bash.\n Just type in a command to the shell, after $. Have fun!\n\n");
+	printf("Welcome to simple_shell!\nThis C program mimics a shell like Bash.\nJust type in a command to the shell, after $. Have fun!\n\n");
 	bool running = true;
 	// Allocate buffer for user input
 	char* buffer;
 	size_t buf_size = 32;
+	buffer = (char*)malloc(buf_size * sizeof(char));
 
 	// Loop that controls shell behavior
 	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
 	while (running) {
-		printf("SSHELL$ ");
-		buffer = (char*)malloc(buf_size * sizeof(char));
-		// Reads in input and parses
-		getline(&buffer, &buf_size, stdin);
+		buffer = shell_Input(buffer, buf_size);
 		int size = count_spaces(buffer);
 		char** args = parse_Input(buffer, size);
-		
+
 		// Branches to different commands
 		// strcmp returns 0 if the strings are equal
 		if (!strcmp(args[0], LS_CMD)) {
@@ -168,6 +166,28 @@ void shell() {
 	}
 }
 
+char* shell_Input(char* buff, size_t buf_size) {
+	printf("SSHELL$ ");
+	int i = 0;
+	int c;
+	int end = buf_size * sizeof(char);
+
+	c = fgetc(stdin);
+	while (c != '\n' && c != EOF) {
+		buff[i] = (char) c;
+		i++;
+		// If next char is not EOF, check if there's enough space
+		c = fgetc(stdin);
+		if (c != '\n' && c != EOF) {
+			if (i == end) {
+				buff = realloc(buff, buf_size * 2 * sizeof(char));
+			}
+		}
+	}
+
+	return buff;
+}
+
 /* Separates expressions from user input, stores results
  * into 2D char arrays (essentially array of strings).
  * WARNING: FUNCTION DOESN'T PARSE THE LAST NEWLINE CHAR CORRECTLY
@@ -185,6 +205,7 @@ char** parse_Input(char* buff, int size) {
 	// Takes in a char* once, and then each consecutive call returns
 	// strings delimited by the specified char
 	char* nextWord = strtok(buff, " ");
+	
 	int row = 0;
 	
 	// Loop until no more tokens (spaces) found
@@ -192,20 +213,10 @@ char** parse_Input(char* buff, int size) {
 		arr[row] = nextWord;
 		row++;
 		ARG_C++;
-
-		// Removes newline from last expression
-		if (row == size) {
-			int len = strlen(nextWord);
-			if (nextWord[len - 1] == '\n') {
-				nextWord[len - 1] = 0;
-			}
-		}
-
 		nextWord = strtok(NULL, " ");
 	}
 
 	free(nextWord);
-
 	return arr;
 }
 
