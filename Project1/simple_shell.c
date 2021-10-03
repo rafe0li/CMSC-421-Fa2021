@@ -19,6 +19,7 @@ char* LS_CMD = "ls";
 char* EXIT_CMD = "exit";
 char* ECHO_CMD = "echo";
 char* PROC_CMD = "proc";
+char* AST = "*";
 /* How many args the user has entered
  * Incremented during input parsing
 */
@@ -65,8 +66,8 @@ void shell() {
 						}
 						else if (*p == 'l') {
 							op_l = 1;
-						}
 						// User selected unsupported option
+						}
 						else {
 							perror("Option not available");
 							exit(EXIT_FAILURE);
@@ -115,6 +116,47 @@ void shell() {
 			else {
 				fprintf(stderr, "\nERROR\nInvalid arguments\n\n");
 				exit(EXIT_FAILURE);
+			}
+		}
+
+		else if (!strcmp(args[0], ECHO_CMD)) {
+			// echo
+			if (ARG_C == 1)
+				printf("\n");
+			// echo "Hello \t"
+			else if (ARG_C == 2) {
+				// echo *
+				if (!strcmp(args[1], AST)) {
+					ls_Func(".", 0, 0);
+				}
+				else {
+					echo_Func(args[1], 0);
+				}
+			}
+			// echo -e "Hello \t"
+			else if (ARG_C == 3) {
+				// Checks if -e selected
+				if (args[1][0] == '-') {
+					int op_e = 0;
+					char* p = (char*)(args[1] + 1);
+
+					// Checks which option it was
+					while (*p) {
+						if (*p == 'e') {
+							op_e = 1;
+						}
+						else {
+							perror("Option not available");
+							exit(EXIT_FAILURE);
+						}
+						p++;
+					}
+					echo_Func(args[2], op_e);
+				}
+				else {
+					perror("No options selected or options not available");
+					exit(EXIT_FAILURE);
+				}
 			}
 		}
 
@@ -211,6 +253,16 @@ int exit_Func(int status, int with) {
 		exit(status);
 	}
 	exit(EXIT_SUCCESS);
+}
+
+void echo_Func(char* buff, int op_e) {
+	if (op_e) {
+		buff = unescape(buff, stderr);
+		printf("%s", buff);
+	}
+	else {
+		printf("%s", buff);
+	}
 }
 
 /* argv/argc are how command line args are passed to main 

@@ -15,7 +15,9 @@ extern "C" {
 
 	extern void ls_Func(const char* dir, int op_a, int op_l);
 
-	int exit_Func(int status, int with);
+	extern int exit_Func(int status, int with);
+
+	extern void echo_Func(char* buff, int op_e);
 #ifdef __cplusplus
 }
 #endif
