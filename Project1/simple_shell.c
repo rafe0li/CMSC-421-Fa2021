@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <dirent.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include "simple_shell.h"
 #include "utils.h"
@@ -30,58 +32,41 @@ void shell() {
 	printf("Welcome to simple_shell!\nThis C program mimics a shell like Bash.\nJust type in a command to the shell, after $. Have fun!\n\n");
 	bool running = true;
 	// Allocate buffer for user input
-	char* buffer;
-	size_t buf_size = 32;
-	buffer = (char*)malloc(buf_size * sizeof(char));
 
 	// Loop that controls shell behavior
 	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
 	while (running) {
+		char* buffer;
+		size_t buf_size = 32;
+		int size = 0;
+		buffer = (char*)malloc(buf_size * sizeof(char));
 		buffer = shell_Input(buffer, buf_size);
-		int size = count_spaces(buffer);
+		size = count_spaces(buffer);
 		char** args = parse_Input(buffer, size);
 
 		// Branches to different commands
 		// strcmp returns 0 if the strings are equal
 		if (!strcmp(args[0], LS_CMD)) {
-			// Either one arg, just "ls"
 			if (ARG_C == 1) {
-				ls_Func(".", 0, 0);
+				ls_Func(args, 1);
 			}
-
-			// Or an option is used, -a/-l supported
 			else if (ARG_C == 2) {
-				// Checks if option was selected
 				if (args[1][0] == '-') {
-					int op_a = 0;
-					int op_l = 0;
 					char* p = (char*)(args[1] + 1);
-
-					// Checks which option it was
-					while (*p) {
-						if (*p == 'a') {
-							op_a = 1;
-						}
-						else if (*p == 'l') {
-							op_l = 1;
-						// User selected unsupported option
-						}
-						else {
-							perror("Option not available");
-							exit(EXIT_FAILURE);
-						}
-						p++;
+					// Checks if option is supported
+					if (*p != 'a' && *p != 'A' && *p != 'r' && *p != 'R' && *p != 'S' && *p != 's' && *p != 'l' && *p != 'i' && *p != 'g' && *p != 'T') {
+						perror("Option not available");
+						exit(EXIT_FAILURE);
 					}
-					ls_Func(".", op_a, op_l);
+					ls_Func(args, 0);
 				}
 				else {
-					perror("No options selected or options not available");
+					perror("No options selected or option not available");
 					exit(EXIT_FAILURE);
 				}
 			}
-
 			else {
-				perror("Error with arguments");
+				perror("Too many arguments");
 				exit(EXIT_FAILURE);
 			}
 		}
@@ -97,9 +82,15 @@ void shell() {
 				int stat = atoi(args[1]);
 				// atoi returns 0 if the val cannot be parsed
 				if (stat != 0) {
-					free(*args);
-					free(args);
-					exit_Func(stat, 1);
+					// Check if value is valid exit code
+					if (stat < 0 || stat > 255) {
+						free(*args);
+						free(args);
+						exit_Func(stat, 1);
+					}
+					else {
+						fprintf(stderr, "\n ERROR\nExit code \"%s\" is invalid. Must be 0-255\n\n", args[1]);
+					}
 				}
 				// CASE "exit 0"
 				else if (!strcmp(args[1], "0")) {
@@ -125,7 +116,7 @@ void shell() {
 			else if (ARG_C == 2) {
 				// echo *
 				if (!strcmp(args[1], AST)) {
-					ls_Func(".", 0, 0);
+					ls_Func(args, 0);
 				}
 				else {
 					echo_Func(args[1], 0);
@@ -163,6 +154,8 @@ void shell() {
 		}
 		ARG_C = 0;
 		printf("\n");
+		free(buffer);
+		free(args);
 	}
 }
 
@@ -204,7 +197,10 @@ char** parse_Input(char* buff, int size) {
 	char** arr = create_Char_Array(size);
 	// Takes in a char* once, and then each consecutive call returns
 	// strings delimited by the specified char
-	char* nextWord = strtok(buff, " ");
+	// sPtr is savepointer, special pointer used by strtok_r
+	char* sPtr;
+	char* nextWord = (char*) malloc(sizeof(buff) * sizeof(char));
+	nextWord = strtok_r(buff, " ", &sPtr);
 	
 	int row = 0;
 	
@@ -213,9 +209,16 @@ char** parse_Input(char* buff, int size) {
 		arr[row] = nextWord;
 		row++;
 		ARG_C++;
-		nextWord = strtok(NULL, " ");
+		nextWord = strtok_r(NULL, " ", &sPtr);
 	}
-
+	// Arg lists have to be null terminated
+	if (row == 0) {
+		arr[row + 1] = (void*)0;
+	}
+	else {
+		arr[row] = (void*)0;
+	}
+	
 	free(nextWord);
 	return arr;
 }
@@ -228,35 +231,24 @@ char** create_Char_Array(int m) {
 	return arr;
 }
 
-void ls_Func(const char *dir, int op_a, int op_l) {
-	struct dirent* d;
-	DIR* dh = opendir(dir);
-	if (!dh)
-	{
-		if (errno = ENOENT) {
-			// If directory not found
-			fprintf(stderr, "Directory doesn't exist");
+void ls_Func(char** args, int option) {
+	int status;
+	if (option) {
+		if (fork() == 0)
+			execvp(LS_CMD, args);
+		else
+		{
+			wait(&status);
 		}
-		else {
-			// If directory is not readable
-			fprintf(stderr, "Directory cannot be accessed");
+	}
+	else {
+		if (fork() == 0)
+			execvp(LS_CMD, args);
+		else
+		{
+			wait(&status);
 		}
-			
-		exit(EXIT_FAILURE);
 	}
-	
-	while ((d = readdir(dh)) != NULL) {
-		// Continue if hidden files found
-		if (!op_a && d->d_name[0] == '.')
-			continue;
-		printf("%s  ", d->d_name);
-		if (op_l)
-			printf("\n");
-	}
-	if (!op_l)
-		printf("\n");
-
-	free(d);
 }
 
 int exit_Func(int status, int with) {

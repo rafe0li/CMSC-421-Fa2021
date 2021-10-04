@@ -15,7 +15,7 @@ extern "C" {
 
 	extern char** parse_Input(char* buff, int size);
 
-	extern void ls_Func(const char* dir, int op_a, int op_l);
+	extern void ls_Func(char** args, int option);
 
 	extern int exit_Func(int status, int with);
 
