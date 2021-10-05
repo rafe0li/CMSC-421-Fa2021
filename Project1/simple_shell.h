@@ -10,6 +10,8 @@ extern "C" {
 	extern void shell();
 
 	extern char* shell_Input(char* buff, size_t buf_size);
+
+	char* fill_Buff(char* buff, int start);
 	
 	extern char** create_Char_Array(int m);
 

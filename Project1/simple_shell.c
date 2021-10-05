@@ -21,11 +21,13 @@ char* LS_CMD = "ls";
 char* EXIT_CMD = "exit";
 char* ECHO_CMD = "echo";
 char* PROC_CMD = "proc";
+char* FILE_CMD = "/";
 char* AST = "*";
 /* How many args the user has entered
  * Incremented during input parsing
 */
 int ARG_C = 0;
+int BUF_SIZE = 32;
 
 
 void shell() {
@@ -55,19 +57,16 @@ void shell() {
 					char* p = (char*)(args[1] + 1);
 					// Checks if option is supported
 					if (*p != 'a' && *p != 'A' && *p != 'r' && *p != 'R' && *p != 'S' && *p != 's' && *p != 'l' && *p != 'i' && *p != 'g' && *p != 'T') {
-						perror("Option not available");
-						exit(EXIT_FAILURE);
+						fprintf(stderr, "\n ERROR\nOption \"%s\" is not supported\n\n", args[1]);
 					}
 					ls_Func(args, 0);
 				}
 				else {
-					perror("No options selected or option not available");
-					exit(EXIT_FAILURE);
+					fprintf(stderr, "\n ERROR\nNo options available or none selected\n\n");
 				}
 			}
 			else {
-				perror("Too many arguments");
-				exit(EXIT_FAILURE);
+				fprintf(stderr, "\n ERROR\nToo many arguments\n\n");
 			}
 		}
 
@@ -161,22 +160,34 @@ void shell() {
 
 char* shell_Input(char* buff, size_t buf_size) {
 	printf("SSHELL$ ");
+	// Index for char
 	int i = 0;
+	// Char
 	int c;
+	// End of buffer
 	int end = buf_size * sizeof(char);
+	// How many times the buffer has been reallocated
+	int grow = 0;
 
 	c = fgetc(stdin);
 	while (c != '\n' && c != EOF) {
-		buff[i] = (char) c;
+		buff[i] = c;
 		i++;
 		// If next char is not EOF, check if there's enough space
 		c = fgetc(stdin);
 		if (c != '\n' && c != EOF) {
 			if (i == end) {
+				grow++;
 				buff = realloc(buff, buf_size * 2 * sizeof(char));
 			}
 		}
+	} 
+	if (grow != 0) {
+		end = end * grow;
+		BUF_SIZE = BUF_SIZE * grow;
 	}
+	// Initializes remainder of string to null values
+	fill_Buff(buff, i);
 
 	return buff;
 }
@@ -199,9 +210,9 @@ char** parse_Input(char* buff, int size) {
 	// strings delimited by the specified char
 	// sPtr is savepointer, special pointer used by strtok_r
 	char* sPtr;
-	char* nextWord = (char*) malloc(sizeof(buff) * sizeof(char));
+	char* nextWord = (char*) malloc(BUF_SIZE * sizeof(char));
 	nextWord = strtok_r(buff, " ", &sPtr);
-	
+	fill_Buff(nextWord, strlen(nextWord));
 	int row = 0;
 	
 	// Loop until no more tokens (spaces) found
@@ -209,7 +220,9 @@ char** parse_Input(char* buff, int size) {
 		arr[row] = nextWord;
 		row++;
 		ARG_C++;
+		nextWord = (char*)realloc(nextWord, BUF_SIZE * sizeof(char));
 		nextWord = strtok_r(NULL, " ", &sPtr);
+		fill_Buff(nextWord, strlen(nextWord));
 	}
 	// Arg lists have to be null terminated
 	if (row == 0) {
@@ -220,13 +233,22 @@ char** parse_Input(char* buff, int size) {
 	}
 	
 	free(nextWord);
+	BUF_SIZE = 32;
 	return arr;
 }
 
+char* fill_Buff(char* buff, int index) {
+	while (index < (int) sizeof(buff)) {
+		buff[index] = NULL;
+		index++;
+	}
+	return buff;
+}
+
 char** create_Char_Array(int m) {
-	char **arr = malloc (m * sizeof(char *));
+	char **arr = (char**)calloc (m, sizeof(char *));
 	for (int i = 0; i < m; i++) {
-		arr[i] = (char*)malloc(50);
+		arr[i] = (char*)calloc(m, sizeof(char*));
 	}
 	return arr;
 }
