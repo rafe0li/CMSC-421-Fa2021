@@ -33,24 +33,18 @@ int BUF_SIZE = 32;
 void shell() {
 	printf("Welcome to simple_shell!\nThis C program mimics a shell like Bash.\nJust type in a command to the shell, after $. Have fun!\n\n");
 	bool running = true;
-	// Allocate buffer for user input
 
 	// Loop that controls shell behavior
 	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
-	while (running) {
-		char* buffer;
-		size_t buf_size = 32;
-		int size = 0;
-		buffer = (char*)malloc(buf_size * sizeof(char));
-		buffer = shell_Input(buffer, buf_size);
-		size = count_spaces(buffer);
-		char** args = parse_Input(buffer, size);
+	while (running)   {
+		// Create arg array from user
+		char** args = shell_Input();
 
 		// Branches to different commands
 		// strcmp returns 0 if the strings are equal
 		if (!strcmp(args[0], LS_CMD)) {
 			if (ARG_C == 1) {
-				ls_Func(args, 1);
+				ls_Func(args);
 			}
 			else if (ARG_C == 2) {
 				if (args[1][0] == '-') {
@@ -59,7 +53,7 @@ void shell() {
 					if (*p != 'a' && *p != 'A' && *p != 'r' && *p != 'R' && *p != 'S' && *p != 's' && *p != 'l' && *p != 'i' && *p != 'g' && *p != 'T') {
 						fprintf(stderr, "\n ERROR\nOption \"%s\" is not supported\n\n", args[1]);
 					}
-					ls_Func(args, 0);
+					ls_Func(args);
 				}
 				else {
 					fprintf(stderr, "\n ERROR\nNo options available or none selected\n\n");
@@ -115,10 +109,10 @@ void shell() {
 			else if (ARG_C == 2) {
 				// echo *
 				if (!strcmp(args[1], AST)) {
-					ls_Func(args, 0);
+					printf("\ntrolling\n");
 				}
 				else {
-					echo_Func(args[1], 0);
+					echo_Func(args, 0);
 				}
 			}
 			// echo -e "Hello \t"
@@ -139,7 +133,7 @@ void shell() {
 						}
 						p++;
 					}
-					echo_Func(args[2], op_e);
+					echo_Func(args, op_e);
 				}
 				else {
 					perror("No options selected or options not available");
@@ -153,43 +147,53 @@ void shell() {
 		}
 		ARG_C = 0;
 		printf("\n");
-		free(buffer);
 		free(args);
 	}
 }
 
-char* shell_Input(char* buff, size_t buf_size) {
-	printf("SSHELL$ ");
+char** shell_Input() {
+	// Char buffer
+	char* buffer = (char*)calloc(1, sizeof(char*));
+	// Whether in quoted text or not
+	int in_Quotes = 0;
+	// Number of arguments
+	int num_Args = 1;
 	// Index for char
 	int i = 0;
 	// Char
 	int c;
-	// End of buffer
-	int end = buf_size * sizeof(char);
-	// How many times the buffer has been reallocated
-	int grow = 0;
 
+	printf("SSHELL$ ");
 	c = fgetc(stdin);
 	while (c != '\n' && c != EOF) {
-		buff[i] = c;
-		i++;
-		// If next char is not EOF, check if there's enough space
-		c = fgetc(stdin);
-		if (c != '\n' && c != EOF) {
-			if (i == end) {
-				grow++;
-				buff = realloc(buff, buf_size * 2 * sizeof(char));
+		// Counts the number of unquoted spaces, or args
+		if (c == ' ') {
+			if (!in_Quotes) {
+				num_Args++;
 			}
 		}
-	} 
-	if (grow != 0) {
-		end = end * grow;
-		BUF_SIZE = BUF_SIZE * grow;
-	}
-	// Initializes remainder of string to null values
-	fill_Buff(buff, i);
+		if (c == '\"') {
+			if (in_Quotes) {
+				in_Quotes = 0;
+			}
+			else {
+				in_Quotes = 1;
+			}
+		}
 
-	return buff;
+		buffer[i] = c;
+		i++;
+		c = fgetc(stdin);
+		if (c != '\n' && c != EOF) {
+			buffer = (char*)realloc(buffer, sizeof(char*) * i);
+		}
+	}
+	//printf("\nSHELL_INPUT() NUM_ARGS: [%d] \n", num_Args);
+	
+	//printf("\nSHELL_INPUT() BUFFER SIZE: [%d]\n\n", end);
+	//printf("\nSHELL_INPUT() BUFFER: [%s]\n\n", buffer);
+	char** args = parse_Input(buffer, num_Args);
+	return args;
 }
 
 /* Separates expressions from user input, stores results
@@ -205,26 +209,28 @@ char* shell_Input(char* buff, size_t buf_size) {
 */
 char** parse_Input(char* buff, int size) {
 	// Allocate memory for a 2D char array, string array in C
-	char** arr = create_Char_Array(size);
+	char** arr = (char**)calloc(size, sizeof(char*));
 	// Takes in a char* once, and then each consecutive call returns
 	// strings delimited by the specified char
 	// sPtr is savepointer, special pointer used by strtok_r
 	char* sPtr;
-	char* nextWord = (char*) malloc(BUF_SIZE * sizeof(char));
-	nextWord = strtok_r(buff, " ", &sPtr);
-	fill_Buff(nextWord, strlen(nextWord));
+	char* tok;
+	tok = strtok_r(buff, " ", &sPtr);
+	//printf("\nLENGTH CHAR ARRAY: [%d]\n", size);
+	//printf("\nLENGTH OF NEXTWORD: [%ld]\n", strlen(tok));
 	int row = 0;
 	
 	// Loop until no more tokens (spaces) found
-	while (nextWord != NULL) {
-		arr[row] = nextWord;
+	while (tok != NULL) {
+		arr[row] = (char*)calloc(32, sizeof(char));
+		arr[row] = tok;
+		//printf("\nPARSE_INPUT NEXTWORD: [%s]\n\n", tok);
 		row++;
 		ARG_C++;
-		nextWord = (char*)realloc(nextWord, BUF_SIZE * sizeof(char));
-		nextWord = strtok_r(NULL, " ", &sPtr);
-		fill_Buff(nextWord, strlen(nextWord));
+		tok = strtok_r(NULL, " ", &sPtr);
 	}
-	// Arg lists have to be null terminated
+
+	// Arg lists for exec have to be null terminated
 	if (row == 0) {
 		arr[row + 1] = (void*)0;
 	}
@@ -232,44 +238,23 @@ char** parse_Input(char* buff, int size) {
 		arr[row] = (void*)0;
 	}
 	
-	free(nextWord);
-	BUF_SIZE = 32;
+	//for (int i = 0; i < row; i++) {
+		//printf("\n\nARGS[I]: [%s]\n", arr[i]);
+	//}
+	//printf("\n");
+
+	// Free nextWord
+	free(tok);
 	return arr;
 }
 
-char* fill_Buff(char* buff, int index) {
-	while (index < (int) sizeof(buff)) {
-		buff[index] = NULL;
-		index++;
-	}
-	return buff;
-}
-
-char** create_Char_Array(int m) {
-	char **arr = (char**)calloc (m, sizeof(char *));
-	for (int i = 0; i < m; i++) {
-		arr[i] = (char*)calloc(m, sizeof(char*));
-	}
-	return arr;
-}
-
-void ls_Func(char** args, int option) {
+void ls_Func(char** args) {
 	int status;
-	if (option) {
-		if (fork() == 0)
-			execvp(LS_CMD, args);
-		else
-		{
-			wait(&status);
-		}
+	if (fork() == 0) {
+		execvp(LS_CMD, args);
 	}
 	else {
-		if (fork() == 0)
-			execvp(LS_CMD, args);
-		else
-		{
-			wait(&status);
-		}
+		wait(&status);
 	}
 }
 
@@ -280,13 +265,18 @@ int exit_Func(int status, int with) {
 	exit(EXIT_SUCCESS);
 }
 
-void echo_Func(char* buff, int op_e) {
+void echo_Func(char** args, int op_e) {
 	if (op_e) {
-		buff = unescape(buff, stderr);
-		printf("%s", buff);
+		for (int i = 0; i < ARG_C; i++) {
+			args[i] = realloc(unescape(args[i], stderr), BUF_SIZE * sizeof(char));
+		}
+	}
+	int status;
+	if (fork() == 0) {
+		execvp(ECHO_CMD, args);
 	}
 	else {
-		printf("%s", buff);
+		wait(&status);
 	}
 }
 
