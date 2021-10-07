@@ -23,11 +23,8 @@ char* ECHO_CMD = "echo";
 char* PROC_CMD = "proc";
 char* FILE_CMD = "/";
 char* AST = "*";
-/* How many args the user has entered
- * Incremented during input parsing
-*/
+// Number of args entered, used by parsing algorithm
 int ARG_C = 0;
-int BUF_SIZE = 32;
 
 
 void shell() {
@@ -154,22 +151,22 @@ void shell() {
 char** shell_Input() {
 	// Char buffer
 	char* buffer = (char*)calloc(1, sizeof(char*));
-	// Whether in quoted text or not
-	int in_Quotes = 0;
-	// Number of arguments
-	int num_Args = 1;
 	// Index for char
 	int i = 0;
-	// Char
+	// Char to be entered in
 	int c;
+	// Whether in quoted text or not
+	int in_Quotes = 0;
+	
 
 	printf("SSHELL$ ");
 	c = fgetc(stdin);
+	ARG_C++;
 	while (c != '\n' && c != EOF) {
 		// Counts the number of unquoted spaces, or args
 		if (c == ' ') {
 			if (!in_Quotes) {
-				num_Args++;
+				ARG_C++;
 			}
 		}
 		if (c == '\"') {
@@ -184,15 +181,16 @@ char** shell_Input() {
 		buffer[i] = c;
 		i++;
 		c = fgetc(stdin);
+		// Allocates a new byte per new char entered
 		if (c != '\n' && c != EOF) {
 			buffer = (char*)realloc(buffer, sizeof(char*) * i);
 		}
 	}
-	//printf("\nSHELL_INPUT() NUM_ARGS: [%d] \n", num_Args);
 	
 	//printf("\nSHELL_INPUT() BUFFER SIZE: [%d]\n\n", end);
 	//printf("\nSHELL_INPUT() BUFFER: [%s]\n\n", buffer);
-	char** args = parse_Input(buffer, num_Args);
+	char** args = parse_Input(buffer, ARG_C);
+	free(buffer);
 	return args;
 }
 
@@ -208,43 +206,49 @@ char** shell_Input() {
  * https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
 */
 char** parse_Input(char* buff, int size) {
-	// Allocate memory for a 2D char array, string array in C
-	char** arr = (char**)calloc(size, sizeof(char*));
-	// Takes in a char* once, and then each consecutive call returns
-	// strings delimited by the specified char
-	// sPtr is savepointer, special pointer used by strtok_r
-	char* sPtr;
-	char* tok;
-	tok = strtok_r(buff, " ", &sPtr);
-	//printf("\nLENGTH CHAR ARRAY: [%d]\n", size);
-	//printf("\nLENGTH OF NEXTWORD: [%ld]\n", strlen(tok));
-	int row = 0;
+	// Allocate memory for a 2D char array (string array in C)
+	// size + 1 to add NULL at end, exec only accepts null-terminated arg lists
+	char** arr = (char**)calloc(size + 1, sizeof(char*));
+	// Char to be entered into token
+	char c;
+	// Token from buffer
+	char* token = (char*)calloc(1, sizeof(char*));
+	// Array index
+	int arr_I = 0;
+	// Buffer index
+	int buff_I = 0;
+	// Token index
+	int tok_I = 0;
+	// Size of token, allocates only as much as needed
+	int tok_size = 2;
+	while (buff_I <= (int)strlen(buff)) {
+		c = buff[buff_I];
+		if (c != ' ') {
+			token = (char*)realloc(token, sizeof(char*) * tok_size);
+			token[tok_I] = c;
+			buff_I++;
+			tok_I++;
+			tok_size++;
+		}
+		if (c == ' ' || buff_I == (int)strlen(buff)) {
+			arr[arr_I] = (char*)calloc(tok_size, sizeof(char*));
+			strcpy(arr[arr_I], token);
+			arr_I++;
+			buff_I++;
+			tok_I = 0;
+			tok_size = 1;
+		}
+	}
 	
-	// Loop until no more tokens (spaces) found
-	while (tok != NULL) {
-		arr[row] = (char*)calloc(32, sizeof(char));
-		arr[row] = tok;
-		//printf("\nPARSE_INPUT NEXTWORD: [%s]\n\n", tok);
-		row++;
-		ARG_C++;
-		tok = strtok_r(NULL, " ", &sPtr);
+	arr[arr_I] = (char*)calloc(1, sizeof(char*));
+	arr[arr_I] = NULL;
+
+	for (int i = 0; i < 2; i++) {
+		printf("\nARGS[%d] = [%s] \n\n", i, arr[i]);
 	}
 
-	// Arg lists for exec have to be null terminated
-	if (row == 0) {
-		arr[row + 1] = (void*)0;
-	}
-	else {
-		arr[row] = (void*)0;
-	}
-	
-	//for (int i = 0; i < row; i++) {
-		//printf("\n\nARGS[I]: [%s]\n", arr[i]);
-	//}
-	//printf("\n");
-
-	// Free nextWord
-	free(tok);
+	// Free token
+	free(token);
 	return arr;
 }
 
@@ -267,9 +271,7 @@ int exit_Func(int status, int with) {
 
 void echo_Func(char** args, int op_e) {
 	if (op_e) {
-		for (int i = 0; i < ARG_C; i++) {
-			args[i] = realloc(unescape(args[i], stderr), BUF_SIZE * sizeof(char));
-		}
+		printf("\nsus\n");
 	}
 	int status;
 	if (fork() == 0) {
