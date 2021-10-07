@@ -6,7 +6,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+	// Runs shell
 	extern void shell();
 
 	// Takes in input
@@ -15,11 +15,17 @@ extern "C" {
 	// Parses input
 	extern char** parse_Input(char* buff, int size);
 
-	extern void ls_Func(char** args);
+	// Frees 2D Char array
+	extern void destroy_Arr(char** arr, int size);
 
+	// Calls Bash with exec
+	extern void call_Bash(char** args);
+
+	// Displays info from proc files
+	extern void proc_Func(char** args);
+
+	// Exits out of shell
 	extern int exit_Func(int status, int with);
-
-	extern void echo_Func(char** args, int op_e);
 #ifdef __cplusplus
 }
 #endif

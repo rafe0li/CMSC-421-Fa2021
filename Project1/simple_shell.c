@@ -17,12 +17,9 @@
 #include "utils.h"
 
 // Globals for matching the user's commands
-char* LS_CMD = "ls";
 char* EXIT_CMD = "exit";
-char* ECHO_CMD = "echo";
 char* PROC_CMD = "proc";
-char* FILE_CMD = "/";
-char* AST = "*";
+char* PROC_FILES = "/proc/";
 // Number of args entered, used by parsing algorithm
 int ARG_C = 0;
 
@@ -37,31 +34,10 @@ void shell() {
 		// Create arg array from user
 		char** args = shell_Input();
 
-		// Branches to different commands
+		// If not exit or proc, attempt to run command
 		// strcmp returns 0 if the strings are equal
-		if (!strcmp(args[0], LS_CMD)) {
-			if (ARG_C == 1) {
-				ls_Func(args);
-			}
-			else if (ARG_C == 2) {
-				if (args[1][0] == '-') {
-					char* p = (char*)(args[1] + 1);
-					// Checks if option is supported
-					if (*p != 'a' && *p != 'A' && *p != 'r' && *p != 'R' && *p != 'S' && *p != 's' && *p != 'l' && *p != 'i' && *p != 'g' && *p != 'T') {
-						fprintf(stderr, "\n ERROR\nOption \"%s\" is not supported\n\n", args[1]);
-					}
-					ls_Func(args);
-				}
-				else {
-					fprintf(stderr, "\n ERROR\nNo options available or none selected\n\n");
-				}
-			}
-			else {
-				fprintf(stderr, "\n ERROR\nToo many arguments\n\n");
-			}
-		}
 
-		else if (!strcmp(args[0], EXIT_CMD)) {
+		if (!strcmp(args[0], EXIT_CMD)) {
 			if (ARG_C == 1) {
 				free(*args);
 				free(args);
@@ -98,62 +74,29 @@ void shell() {
 			}
 		}
 
-		else if (!strcmp(args[0], ECHO_CMD)) {
-			// echo
-			if (ARG_C == 1)
-				printf("\n");
-			// echo "Hello \t"
-			else if (ARG_C == 2) {
-				// echo *
-				if (!strcmp(args[1], AST)) {
-					printf("\ntrolling\n");
-				}
-				else {
-					echo_Func(args, 0);
-				}
+		else if (!strcmp(args[0], PROC_CMD)) {
+			if (ARG_C == 2) {
+				proc_Func(args);
 			}
-			// echo -e "Hello \t"
-			else if (ARG_C == 3) {
-				// Checks if -e selected
-				if (args[1][0] == '-') {
-					int op_e = 0;
-					char* p = (char*)(args[1] + 1);
-
-					// Checks which option it was
-					while (*p) {
-						if (*p == 'e') {
-							op_e = 1;
-						}
-						else {
-							perror("Option not available");
-							exit(EXIT_FAILURE);
-						}
-						p++;
-					}
-					echo_Func(args, op_e);
-				}
-				else {
-					perror("No options selected or options not available");
-					exit(EXIT_FAILURE);
-				}
+			else {
+				fprintf(stderr, "\nERROR\nInvalid arguments\n\n");
+				exit(EXIT_FAILURE);
 			}
 		}
 
 		else {
-			printf("\n simple_shell: %s : command not found\n\n", args[0]);
+			call_Bash(args);
 		}
+		destroy_Arr(args, ARG_C);
 		ARG_C = 0;
 		printf("\n");
-		free(args);
 	}
 }
 
 char** shell_Input() {
-	// Char buffer
 	char* buffer = (char*)calloc(1, sizeof(char*));
 	// Index for char
 	int i = 0;
-	// Char to be entered in
 	int c;
 	// Whether in quoted text or not
 	int in_Quotes = 0;
@@ -161,6 +104,7 @@ char** shell_Input() {
 
 	printf("SSHELL$ ");
 	c = fgetc(stdin);
+	// Initializes arg counter
 	ARG_C++;
 	while (c != '\n' && c != EOF) {
 		// Counts the number of unquoted spaces, or args
@@ -169,7 +113,7 @@ char** shell_Input() {
 				ARG_C++;
 			}
 		}
-		if (c == '\"') {
+		if (c == '"') {
 			if (in_Quotes) {
 				in_Quotes = 0;
 			}
@@ -181,7 +125,7 @@ char** shell_Input() {
 		buffer[i] = c;
 		i++;
 		c = fgetc(stdin);
-		// Allocates a new byte per new char entered
+		// Allocates a new byte per char entered
 		if (c != '\n' && c != EOF) {
 			buffer = (char*)realloc(buffer, sizeof(char*) * i);
 		}
@@ -190,20 +134,19 @@ char** shell_Input() {
 	//printf("\nSHELL_INPUT() BUFFER SIZE: [%d]\n\n", end);
 	//printf("\nSHELL_INPUT() BUFFER: [%s]\n\n", buffer);
 	char** args = parse_Input(buffer, ARG_C);
-	free(buffer);
+
+	if (buffer) {
+		free(buffer);
+	}
+	
 	return args;
 }
 
 /* Separates expressions from user input, stores results
- * into 2D char arrays (essentially array of strings).
- * WARNING: FUNCTION DOESN'T PARSE THE LAST NEWLINE CHAR CORRECTLY
+ * into 2D char arrays.
  * 
  * @param[in] buff Input to parse into command/arguments
  * @return 2D char array of parsed results, empty array for no input
- * 
- * 
- * Citations
- * https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
 */
 char** parse_Input(char* buff, int size) {
 	// Allocate memory for a 2D char array (string array in C)
@@ -240,28 +183,74 @@ char** parse_Input(char* buff, int size) {
 		}
 	}
 	
+	// Arg arrays must be null terminated for exec
 	arr[arr_I] = (char*)calloc(1, sizeof(char*));
 	arr[arr_I] = NULL;
 
-	for (int i = 0; i < 2; i++) {
-		printf("\nARGS[%d] = [%s] \n\n", i, arr[i]);
+	if (token) {
+		free(token);
 	}
-
-	// Free token
-	free(token);
+	
 	return arr;
 }
 
-void ls_Func(char** args) {
+void destroy_Arr(char** arr, int size) {
+	for (int i = 0; i < size; i++) {
+		free(arr[i]);
+	}
+	free(arr);
+}
+
+/* Uses execvp to call system with argument array.
+ *
+ * @param[in] args Parsed argument array from user
+*/
+void call_Bash(char** args) {
 	int status;
 	if (fork() == 0) {
-		execvp(LS_CMD, args);
+		execvp(args[0], args);
 	}
 	else {
 		wait(&status);
 	}
 }
 
+/* Prints data from Linux's proc system.
+ *
+ * @param[in] args Parsed arg array specifying which proc file
+*/
+void proc_Func(char** args) {
+	FILE* fp;
+	char* line = NULL;
+	char* file_Name = (char*) malloc(6 * sizeof(args[1]) * sizeof(char*));
+	strcpy(file_Name, PROC_FILES);
+	strcat(file_Name, args[1]);
+	size_t len = 0;
+	ssize_t read;
+	fp = fopen(file_Name, "r");
+	if (fp == NULL)
+		exit(EXIT_FAILURE);
+
+	while ((read = getline(&line, &len, fp)) != -1) {
+		fprintf(stdout, "%s", line);
+	}
+
+	if (line) {
+		free(line);
+	}
+	if (file_Name) {
+		free(file_Name);
+	}
+
+	fclose(fp);
+}
+
+/* Exits either with user specified return code
+ * or normal return code.
+ *
+ * @param[in] status User specified exit code
+ * @param[in] with Bool whether exiting normally or with user code
+*/
 int exit_Func(int status, int with) {
 	if (with) {
 		exit(status);
@@ -269,23 +258,6 @@ int exit_Func(int status, int with) {
 	exit(EXIT_SUCCESS);
 }
 
-void echo_Func(char** args, int op_e) {
-	if (op_e) {
-		printf("\nsus\n");
-	}
-	int status;
-	if (fork() == 0) {
-		execvp(ECHO_CMD, args);
-	}
-	else {
-		wait(&status);
-	}
-}
-
-/* argv/argc are how command line args are passed to main 
- * in C. Error case is for requirement 1, shell program 
- * should take no arguments
- */
 int main(int argc, char *argv[]) {
 	if (argc > 1) {
 		fprintf(stderr, "ERROR\n simple_shell cannot be called with command line arguments, %d found \n\n", argc - 1);
