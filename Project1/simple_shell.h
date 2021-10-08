@@ -1,3 +1,10 @@
+/*@simple_shell.h
+* @author Rafael Li, rafaell1@umbc.edu
+*
+* C program that parses command line args. Functions control the
+* shell itself, input parsing, reading proc files, and exiting with 
+* a return code.
+*/
 #ifndef SIMPLE_SHELL_H
 #define	SIMPLE_SHELL_H
 

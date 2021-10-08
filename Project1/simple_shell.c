@@ -1,9 +1,10 @@
 /*@simple_shell.c
 * @author Rafael Li, rafaell1@umbc.edu
 *
-* C program that takes command line arguments into a
-* buffer and parses them, calling Bash with exec.
-* The program allows the 
+* C program that parses arguments from a command line, calling Bash with exec.
+* The program allows the user to exit with a valid return code,
+* along with providing access to several files in the proc filesystem.
+* proc files read using C file I/O.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,7 @@
 // Globals for matching the user's commands
 char* EXIT_CMD = "exit";
 char* PROC_CMD = "proc";
+// Used to access proc binaries
 char* PROC_FILES = "/proc/";
 // Number of args entered, used by parsing/control to keep track of args
 int ARG_C = 0;
@@ -275,6 +277,11 @@ int exit_Func(int status, int with) {
 	exit(EXIT_SUCCESS);
 }
 
+/* Calls shell program, does not allow calling with args.
+ *
+ * @param[in] argc Argument count
+ * @param[in] argv Argument array
+*/
 int main(int argc, char* argv[]) {
 	if (argc > 1) {
 		fprintf(stderr, "ERROR\n simple_shell cannot be called with command line arguments, %d found \n\n", argc - 1);
