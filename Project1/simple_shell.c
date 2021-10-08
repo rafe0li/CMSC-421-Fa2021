@@ -1,9 +1,9 @@
 /*@simple_shell.c
 * @author Rafael Li, rafaell1@umbc.edu
 *
-* C program that mimics the behavior of a shell.
-* Takes no arguments on start, and will take a variety
-* of args depending on the commands that are invoked by the user.
+* C program that takes command line arguments into a
+* buffer and parses them, calling Bash with exec.
+* The program allows the 
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,17 +20,14 @@
 char* EXIT_CMD = "exit";
 char* PROC_CMD = "proc";
 char* PROC_FILES = "/proc/";
-// Number of args entered, used by parsing algorithm
+// Number of args entered, used by parsing/control to keep track of args
 int ARG_C = 0;
 
 
 void shell() {
 	printf("Welcome to simple_shell!\nThis C program mimics a shell like Bash.\nJust type in a command to the shell, after $. Have fun!\n\n");
-	bool running = true;
 
-	// Loop that controls shell behavior
-	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
-	while (running) {
+	while (true) {
 		// Create arg array from user
 		char** args = shell_Input();
 
@@ -79,7 +76,13 @@ void shell() {
 		}
 
 		else {
-			call_Bash(args);
+			if (args[0][0] == '/') {
+				call_Bash(args, 1);
+			}
+			else {
+				call_Bash(args, 0);
+			}
+			
 		}
 		destroy_Arr(args, ARG_C);
 		ARG_C = 0;
@@ -87,6 +90,10 @@ void shell() {
 	}
 }
 
+/* Prints shell prompt and takes in input from user.
+ * Only allocates as much memory as needed. 
+ * 
+*/
 char** shell_Input() {
 	char* buffer = (char*)calloc(1, sizeof(char*));
 	// Index for char
@@ -124,6 +131,7 @@ char** shell_Input() {
 	buffer = (char*)realloc(buffer, sizeof(char*) * (i + 1));
 	buffer[i] = '\0';
 
+	// Create arg array by parsing input buffer
 	char** args = parse_Input(buffer, ARG_C);
 
 	if (buffer) {
@@ -140,7 +148,7 @@ char** shell_Input() {
  * @return 2D char array of parsed results, empty array for no input
 */
 char** parse_Input(char* buff, int size) {
-	// size + 1 to add NULL at end, exec only accepts null-terminated arg lists
+	// Extra memory space to null terminate list
 	char** arr = (char**)calloc(size + 1, sizeof(char*));
 	char c;
 	char* token = (char*)calloc(1, sizeof(char*));
@@ -163,10 +171,16 @@ char** parse_Input(char* buff, int size) {
 			tok_I++;
 			tok_size++;
 		}
+		// Second cond is case of adding the last argument
+		// (after reading in the last char)
 		if (c == ' ' || buff_I == buff_len) {
+			// Null terminate
+			token[tok_I] = '\0';
+			// Unescapes the token before copying it into array
 			arr[arr_I] = (char*)calloc(tok_size, sizeof(char*) * tok_size);
 			char* unesc_token = unescape(token, stderr);
 			strcpy(arr[arr_I], unesc_token);
+			memset(token, 0, tok_size);
 			// Increment array/buffer indices, and reset token
 			arr_I++;
 			buff_I++;
@@ -202,11 +216,17 @@ void destroy_Arr(char** arr, int size) {
 /* Uses execvp to call system with argument array.
  *
  * @param[in] args Parsed argument array from user
+ * @param[in] absolute Whether user used absolute path to call cmd
 */
-void call_Bash(char** args) {
+void call_Bash(char** args, int absolute) {
 	int status;
 	if (fork() == 0) {
-		execvp(args[0], args);
+		if (absolute) {
+			execv(args[0], args);
+		}
+		else {
+			execvp(args[0], args);
+		}
 	}
 	else {
 		wait(&status);

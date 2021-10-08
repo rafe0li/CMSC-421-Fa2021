@@ -19,7 +19,7 @@ extern "C" {
 	extern void destroy_Arr(char** arr, int size);
 
 	// Calls Bash with exec
-	extern void call_Bash(char** args);
+	extern void call_Bash(char** args, int absolute);
 
 	// Displays info from proc files
 	extern void proc_Func(char** args);
