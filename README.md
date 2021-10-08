@@ -1,6 +1,6 @@
 # @author Rafael Li, AA31613, rafaell1@umbc.edu
 # CMSC 421 Section 01
-# simple_shell.c simple_shell.h utils.c utils.h Makefile README.md
+# simple_shell.c, simple_shell.h, utils.c, utils.h, Makefile, README.md
 
 A C program that simulates the behavior of Bash by parsing input and calling exec.
 
