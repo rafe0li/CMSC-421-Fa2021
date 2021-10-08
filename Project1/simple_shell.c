@@ -1,6 +1,6 @@
 /*@simple_shell.c
 * @author Rafael Li, rafaell1@umbc.edu
-* 
+*
 * C program that mimics the behavior of a shell.
 * Takes no arguments on start, and will take a variety
 * of args depending on the commands that are invoked by the user.
@@ -30,7 +30,7 @@ void shell() {
 
 	// Loop that controls shell behavior
 	// NO REASON TO CHANGE PERROR UNLESS ASKED TO
-	while (running)   {
+	while (running) {
 		// Create arg array from user
 		char** args = shell_Input();
 
@@ -120,20 +120,22 @@ char** shell_Input() {
 		i++;
 		c = fgetc(stdin);
 	}
+	// String must be null-terminated, otherwise strlen will leak
+	buffer = (char*)realloc(buffer, sizeof(char*) * (i + 1));
+	buffer[i] = '\0';
 
-	
 	char** args = parse_Input(buffer, ARG_C);
 
 	if (buffer) {
 		free(buffer);
 	}
-	
+
 	return args;
 }
 
 /* Separates expressions from user input, stores results
  * into 2D char arrays.
- * 
+ *
  * @param[in] buff Input to parse into command/arguments
  * @return 2D char array of parsed results, empty array for no input
 */
@@ -173,7 +175,7 @@ char** parse_Input(char* buff, int size) {
 			free(unesc_token);
 		}
 	}
-	
+
 	// Null terminates array
 	// Arg arrays must be for exec
 	arr[arr_I] = NULL;
@@ -181,7 +183,7 @@ char** parse_Input(char* buff, int size) {
 	if (token) {
 		free(token);
 	}
-	
+
 	return arr;
 }
 
@@ -218,7 +220,7 @@ void call_Bash(char** args) {
 void proc_Func(char** args) {
 	FILE* fp;
 	char* line = NULL;
-	char* file_Name = (char*) malloc(6 * sizeof(args[1]) * sizeof(char*));
+	char* file_Name = (char*)malloc(6 * sizeof(args[1]) * sizeof(char*));
 	// Adds "/proc/" to the requested file, stored in file_Name
 	strcpy(file_Name, PROC_FILES);
 	strcat(file_Name, args[1]);
@@ -253,7 +255,7 @@ int exit_Func(int status, int with) {
 	exit(EXIT_SUCCESS);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 	if (argc > 1) {
 		fprintf(stderr, "ERROR\n simple_shell cannot be called with command line arguments, %d found \n\n", argc - 1);
 		exit(EXIT_FAILURE);
