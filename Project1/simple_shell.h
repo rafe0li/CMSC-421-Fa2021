@@ -1,5 +1,7 @@
 /*@simple_shell.h
-* @author Rafael Li, rafaell1@umbc.edu
+* @author Rafael Li, AA31613, rafaell1@umbc.edu
+* CMSC 421, Section 01
+* Project 1 C Shell
 *
 * C program that parses command line args. Functions control the
 * shell itself, input parsing, reading proc files, and exiting with 

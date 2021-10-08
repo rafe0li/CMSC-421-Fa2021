@@ -1,5 +1,7 @@
 /*@simple_shell.c
-* @author Rafael Li, rafaell1@umbc.edu
+* @author Rafael Li, AA31613, rafaell1@umbc.edu
+* CMSC 421, Section 01
+* Project 1 C Shell
 *
 * C program that parses arguments from a command line, calling Bash with exec.
 * The program allows the user to exit with a valid return code,
@@ -215,7 +217,8 @@ void destroy_Arr(char** arr, int size) {
 	free(arr);
 }
 
-/* Uses execvp to call system with argument array.
+/* Uses execv or execvp to call system with arg array,
+ * depending on whether absolute path used.
  *
  * @param[in] args Parsed argument array from user
  * @param[in] absolute Whether user used absolute path to call cmd
@@ -223,9 +226,11 @@ void destroy_Arr(char** arr, int size) {
 void call_Bash(char** args, int absolute) {
 	int status;
 	if (fork() == 0) {
+		// Absolute path to a program binary, such as "/bin/ls"
 		if (absolute) {
 			execv(args[0], args);
 		}
+		// Calling command directly, "ls"
 		else {
 			execvp(args[0], args);
 		}
@@ -277,7 +282,7 @@ int exit_Func(int status, int with) {
 	exit(EXIT_SUCCESS);
 }
 
-/* Calls shell program, does not allow calling with args.
+/* Calls shell program, no arguments allowed.
  *
  * @param[in] argc Argument count
  * @param[in] argv Argument array
