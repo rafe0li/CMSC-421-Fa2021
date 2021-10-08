@@ -34,25 +34,22 @@ void shell() {
 		// Create arg array from user
 		char** args = shell_Input();
 
-		// If not exit or proc, attempt to run command
+		// If not exit or proc, attempt to run command through exec
 		// strcmp returns 0 if the strings are equal
-
 		if (!strcmp(args[0], EXIT_CMD)) {
 			if (ARG_C == 1) {
-				free(*args);
-				free(args);
+				destroy_Arr(args, ARG_C);
 				exit_Func(0, 0);
 			}
 			else if (ARG_C == 2) {
-				// Stores the argument the user wants to exit with
-				int stat = atoi(args[1]);
-				// atoi returns 0 if the val cannot be parsed
-				if (stat != 0) {
+				// Stores the exit code the user wants
+				int code = atoi(args[1]);
+				// atoi returns 0 if the value cannot be parsed
+				if (code != 0) {
 					// Check if value is valid exit code
-					if (stat < 0 || stat > 255) {
-						free(*args);
-						free(args);
-						exit_Func(stat, 1);
+					if (code < 0 || code > 255) {
+						destroy_Arr(args, ARG_C);
+						exit_Func(code, 1);
 					}
 					else {
 						fprintf(stderr, "\n ERROR\nExit code \"%s\" is invalid. Must be 0-255\n\n", args[1]);
@@ -60,8 +57,7 @@ void shell() {
 				}
 				// CASE "exit 0"
 				else if (!strcmp(args[1], "0")) {
-					free(*args);
-					free(args);
+					destroy_Arr(args, ARG_C);
 					exit_Func(0, 0);
 				}
 				else {
@@ -70,7 +66,6 @@ void shell() {
 			}
 			else {
 				fprintf(stderr, "\nERROR\nInvalid arguments\n\n");
-				exit(EXIT_FAILURE);
 			}
 		}
 
@@ -80,7 +75,6 @@ void shell() {
 			}
 			else {
 				fprintf(stderr, "\nERROR\nInvalid arguments\n\n");
-				exit(EXIT_FAILURE);
 			}
 		}
 
@@ -100,7 +94,6 @@ char** shell_Input() {
 	int c;
 	// Whether in quoted text or not
 	int in_Quotes = 0;
-	
 
 	printf("SSHELL$ ");
 	c = fgetc(stdin);
@@ -121,18 +114,14 @@ char** shell_Input() {
 				in_Quotes = 1;
 			}
 		}
-
+		// Allocates a new byte per char entered
+		buffer = (char*)realloc(buffer, sizeof(char*) * (i + 1));
 		buffer[i] = c;
 		i++;
 		c = fgetc(stdin);
-		// Allocates a new byte per char entered
-		if (c != '\n' && c != EOF) {
-			buffer = (char*)realloc(buffer, sizeof(char*) * i);
-		}
 	}
+
 	
-	//printf("\nSHELL_INPUT() BUFFER SIZE: [%d]\n\n", end);
-	//printf("\nSHELL_INPUT() BUFFER: [%s]\n\n", buffer);
 	char** args = parse_Input(buffer, ARG_C);
 
 	if (buffer) {
@@ -149,42 +138,44 @@ char** shell_Input() {
  * @return 2D char array of parsed results, empty array for no input
 */
 char** parse_Input(char* buff, int size) {
-	// Allocate memory for a 2D char array (string array in C)
 	// size + 1 to add NULL at end, exec only accepts null-terminated arg lists
 	char** arr = (char**)calloc(size + 1, sizeof(char*));
-	// Char to be entered into token
 	char c;
-	// Token from buffer
 	char* token = (char*)calloc(1, sizeof(char*));
-	// Array index
+	int buff_len = 0;
+	buff_len = strlen(buff);
+	// Array, buffer, and token indices
 	int arr_I = 0;
-	// Buffer index
 	int buff_I = 0;
-	// Token index
 	int tok_I = 0;
-	// Size of token, allocates only as much as needed
-	int tok_size = 2;
-	while (buff_I <= (int)strlen(buff)) {
+	// Size of token
+	int tok_size = 1;
+	while (buff_I <= buff_len) {
 		c = buff[buff_I];
 		if (c != ' ') {
+			// If the next char is not a space, add the char to the token
 			token = (char*)realloc(token, sizeof(char*) * tok_size);
 			token[tok_I] = c;
+			// Increment buffer/token indices
 			buff_I++;
 			tok_I++;
 			tok_size++;
 		}
-		if (c == ' ' || buff_I == (int)strlen(buff)) {
-			arr[arr_I] = (char*)calloc(tok_size, sizeof(char*));
-			strcpy(arr[arr_I], token);
+		if (c == ' ' || buff_I == buff_len) {
+			arr[arr_I] = (char*)calloc(tok_size, sizeof(char*) * tok_size);
+			char* unesc_token = unescape(token, stderr);
+			strcpy(arr[arr_I], unesc_token);
+			// Increment array/buffer indices, and reset token
 			arr_I++;
 			buff_I++;
 			tok_I = 0;
 			tok_size = 1;
+			free(unesc_token);
 		}
 	}
 	
-	// Arg arrays must be null terminated for exec
-	arr[arr_I] = (char*)calloc(1, sizeof(char*));
+	// Null terminates array
+	// Arg arrays must be for exec
 	arr[arr_I] = NULL;
 
 	if (token) {
@@ -194,6 +185,11 @@ char** parse_Input(char* buff, int size) {
 	return arr;
 }
 
+/* Frees 2D Char array with given size.
+ *
+ * @param[in] arr The array to be freed
+ * @param[in] size The size of the array
+*/
 void destroy_Arr(char** arr, int size) {
 	for (int i = 0; i < size; i++) {
 		free(arr[i]);
@@ -223,24 +219,23 @@ void proc_Func(char** args) {
 	FILE* fp;
 	char* line = NULL;
 	char* file_Name = (char*) malloc(6 * sizeof(args[1]) * sizeof(char*));
+	// Adds "/proc/" to the requested file, stored in file_Name
 	strcpy(file_Name, PROC_FILES);
 	strcat(file_Name, args[1]);
 	size_t len = 0;
 	ssize_t read;
 	fp = fopen(file_Name, "r");
+	// If file exists read it
 	if (fp == NULL)
-		exit(EXIT_FAILURE);
-
-	while ((read = getline(&line, &len, fp)) != -1) {
-		fprintf(stdout, "%s", line);
+		fprintf(stderr, "\nERROR\nInvalid arguments\n\n");
+	else {
+		while ((read = getline(&line, &len, fp)) != -1) {
+			fprintf(stdout, "%s", line);
+		}
 	}
 
-	if (line) {
-		free(line);
-	}
-	if (file_Name) {
-		free(file_Name);
-	}
+	free(line);
+	free(file_Name);
 
 	fclose(fp);
 }
