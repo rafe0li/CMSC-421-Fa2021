@@ -14,16 +14,23 @@ long init_buffer_421() {
 		//return -1;
 	//}
 
+	// TODO: Figure out read/write setup for insertion
 	for (i = 0; i < SIZE_OF_BUFFER; i++) {
 		curr->data = 0;
 		curr->next = NULL;
+		// First insertion initialize read/write, and do not set curr
 		if (i == 0) {
 			BUFF.read = (struct node_421*)malloc(sizeof(node_421_t));
 			BUFF.read = curr;
 			BUFF.write = (struct node_421*)malloc(sizeof(node_421_t));
 			BUFF.write = curr;
 		}
+		// Link the list together
+		// Last insertion, set next to head
 		else {
+			if (i + 1 == SIZE_OF_BUFFER) {
+				curr->next = BUFF.read;
+			}
 			prev->next = curr;
 		}
 		prev = curr;
@@ -39,9 +46,12 @@ long insert_buffer_421(int i) {
 	// Buffer full
 	//if (BUFF.read == BUFF.write)
 		//return -1;
+
+	// Insert data, increment write pointer and length
 	BUFF.write->data = i;
 	BUFF.write = BUFF.write->next;
 	BUFF.length++;
+
 	//return 0;
 }
 
@@ -62,6 +72,7 @@ long delete_buffer_421() {
 
 int main() {
 	init_buffer_421();
+	insert_buffer_421(1);
 	print_buffer_421();
 	return 0;
 }
