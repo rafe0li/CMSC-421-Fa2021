@@ -48,6 +48,15 @@ int main(int argc, char* argv[]) {
         printf("delete_buffer ran successfully, check dmesg output\n");
     }
 
+    // Test inserting into an uninitialized buffer
+    call = insert_buffer_syscall(1);
+    if (call < 0) {
+        perror("ERROR: Buffer is full, cannot insert")
+    }
+    else {
+        printf("insert_buffer ran successfully, check dmesg output\n");
+    }
+
     // Test init
     call = init_buffer_syscall();
     if (call < 0) {
@@ -67,7 +76,7 @@ int main(int argc, char* argv[]) {
         printf("init_buffer ran successfully, check dmesg output\n");
     }
 
-    // Tests insert, fills buffer
+    // Test insert, fills buffer
     int i;
     for (i = 0; i < 20; i++) {
         call = insert_buffer_syscall(1);
@@ -97,7 +106,7 @@ int main(int argc, char* argv[]) {
         printf("print_buffer ran successfully, check dmesg output\n");
     }
 
-    // Testing delete
+    // Test delete
     call = delete_buffer_syscall();
     if (call < 0) {
         perror("ERROR: Buffer is uninitialized, cannot delete")
