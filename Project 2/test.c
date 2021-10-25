@@ -24,77 +24,113 @@ long print_buffer_421(void) {
 
 
 long delete_buffer_421(void) {
-        return syscall(__NR_print_buffer_421);
+        return syscall(__NR_delete_buffer_421);
 }
 
 int main(int argc, char* argv[]) {
-    long call0;
-    long call1;
-    long call2;
-    long call10;
-    long call11;
+    long call;
 
-    call0 = init_buffer_syscall();
-
-    if (call0 < 0) {
-        perror("init_buffer syscall failed")
+    // Test printing a uninitialized buffer
+    call = print_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer uninitialized, cannot print")
     }
     else {
-        printf("init_buffer ran succesfully, check dmesg output\n");
+        printf("print_buffer ran successfully, check dmesg output\n");
     }
 
-    call1 = insert_buffer_syscall(1);
-
-    if (call1 < 0) {
-        perror("insert_buffer syscall failed")
-    }
-    else {
-        printf("insert_buffer ran succesfully, check dmesg output\n");
-    }
-
-    call2 = insert_buffer_syscall(1);
-
-    if (call2 < 0) {
-        perror("insert_buffer syscall failed")
+    // Testing deleting a uninitialized buffer
+    call = delete_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer is uninitialized, cannot delete")
     }
     else {
-        printf("insert_buffer ran succesfully, check dmesg output\n");
+        printf("delete_buffer ran successfully, check dmesg output\n");
     }
 
-    call3 = insert_buffer_syscall(1);
-
-    if (call3 < 0) {
-        perror("insert_buffer syscall failed")
-    }
-    else {
-        printf("insert_buffer ran succesfully, check dmesg output\n");
-    }
-
-    call4 = insert_buffer_syscall(1);
-
-    if (call4 < 0) {
-        perror("insert_buffer syscall failed")
+    // Test init
+    call = init_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer already initialized, cannot initialize")
     }
     else {
-        printf("insert_buffer ran succesfully, check dmesg output\n");
+        printf("init_buffer ran successfully, check dmesg output\n");
     }
 
-    call10 = print_buffer_syscall();
+    // Test initializing over already initialized buffer
+    call = init_buffer_syscall();
 
-    if (call10 < 0) {
-        perror("print_buffer syscall failed")
-    }
-    else {
-        printf("print_buffer ran succesfully, check dmesg output\n");
-    }
-
-    call11 = delete_buffer_syscall();
-
-    if (call11 < 0) {
-        perror("delete_buffer syscall failed")
+    if (call < 0) {
+        perror("ERROR: Buffer already initialized, cannot initialize")
     }
     else {
-        printf("delete_buffer ran succesfully, check dmesg output\n");
+        printf("init_buffer ran successfully, check dmesg output\n");
+    }
+
+    // Tests insert, fills buffer
+    int i;
+    for (i = 0; i < 20; i++) {
+        call = insert_buffer_syscall(1);
+        if (call < 0) {
+            perror("ERROR: Buffer is full, cannot insert")
+        }
+        else {
+            printf("insert_buffer ran successfully, check dmesg output\n");
+        }
+    }
+
+    // Test inserting into full buffer
+    call = insert_buffer_syscall(1);
+    if (call < 0) {
+        perror("ERROR: Buffer is full, cannot insert")
+    }
+    else {
+        printf("insert_buffer ran successfully, check dmesg output\n");
+    }
+
+    // Test print
+    call = print_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer uninitialized, cannot print")
+    }
+    else {
+        printf("print_buffer ran successfully, check dmesg output\n");
+    }
+
+    // Testing delete
+    call = delete_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer is uninitialized, cannot delete")
+    }
+    else {
+        printf("delete_buffer ran successfully, check dmesg output\n");
+    }
+
+    // Test deleting a deleted buffer
+    call = delete_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer is uninitialized, cannot delete")
+    }
+    else {
+        printf("delete_buffer ran successfully, check dmesg output\n");
+    }
+
+    // Test printing a deleted buffer
+    call = print_buffer_syscall();
+    if (call < 0) {
+        perror("ERROR: Buffer uninitialized, cannot print")
+    }
+    else {
+        printf("print_buffer ran successfully, check dmesg output\n");
+    }
+
+    // Test inserting into deleted buffer
+    call = insert_buffer_syscall(1);
+    if (call < 0) {
+        perror("ERROR: Buffer is full, cannot insert")
+    }
+    else {
+        printf("insert_buffer ran successfully, check dmesg output\n");
     }
 
     return 0;
