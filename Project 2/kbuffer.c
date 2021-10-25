@@ -7,10 +7,11 @@ struct ring_buffer_421 BUFF;
 
 /* Initializes a circular buffer with nodes
 *  that hold an int. Tail node points to head
+* 
 */
 // Commented return conditions for syscall failing
 long init_buffer_421() {
-	// Buffer already initialized
+	// Fails if buffer already initialized
 	if (BUFF.read != NULL) {
 		return -1;
 	}
@@ -57,7 +58,7 @@ long init_buffer_421() {
 * @param[in] i int to write into next node
 */
 long insert_buffer_421(int i) {
-	// Buffer full
+	// Fails if buffer is full
 	if (BUFF.read == BUFF.write) {
 		return -1;
 	}
@@ -76,6 +77,7 @@ long insert_buffer_421(int i) {
 *
 */
 long print_buffer_421() {
+	// Fails if buffer already initialized
 	if (BUFF.read == NULL) {
 		return -1;
 	}
@@ -86,12 +88,12 @@ long print_buffer_421() {
 
 	// Prints first half on one line, second half on next
 	for (i = 0; i < HALF_SIZE_BUFFER; i++) {
-		printf(" %d. [%d]\t", i + 1, curr->data);
+		printk(" %d. [%d]\t", i + 1, curr->data);
 		curr = curr->next;
 	}
 	printf("\n");
 	for (i = HALF_SIZE_BUFFER; i < SIZE_OF_BUFFER; i++) {
-		printf("%d. [%d]\t", i + 1, curr->data);
+		printk("%d. [%d]\t", i + 1, curr->data);
 		curr = curr->next;
 	}
 	printf("\n\n");
@@ -104,6 +106,7 @@ long print_buffer_421() {
 *
 */
 long delete_buffer_421() {
+	// Fails if buffer uninitialized
 	if (BUFF.read != NULL) {
 		struct node_421* curr;
 		struct node_421* prev;
