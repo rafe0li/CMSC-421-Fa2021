@@ -7,10 +7,8 @@ struct ring_buffer_421 BUFF;
 
 /* Initializes a circular buffer with nodes
 *  that hold an int. Tail node points to head
-* 
 */
-// Commented return conditions for syscall failing
-long init_buffer_421() {
+SYSCALL_DEFINE0(init_buffer_421) {
 	// Fails if buffer already initialized
 	if (BUFF.read != NULL) {
 		return -1;
@@ -57,12 +55,11 @@ long init_buffer_421() {
 *
 * @param[in] i int to write into next node
 */
-long insert_buffer_421(int i) {
+SYSCALL_DEFINE0(insert_buffer_421) {
 	// Fails if buffer is full
 	if (BUFF.read == BUFF.write) {
 		return -1;
 	}
-		
 
 	// Insert data, increment write pointer and length
 	BUFF.write->data = i;
@@ -74,9 +71,8 @@ long insert_buffer_421(int i) {
 
 /* Prints all nodes in the buffer.
 *  Fails if buffer is uninitialized.
-*
 */
-long print_buffer_421() {
+SYSCALL_DEFINE0(print_buffer_421) {
 	// Fails if buffer already initialized
 	if (BUFF.read == NULL) {
 		return -1;
@@ -103,9 +99,8 @@ long print_buffer_421() {
 
 /* Deallocates all memory used in circular buffer.
 *  Fails if buffer is uninitialized.
-*
 */
-long delete_buffer_421() {
+SYSCALL_DEFINE0(delete_buffer_421)
 	// Fails if buffer uninitialized
 	if (BUFF.read != NULL) {
 		struct node_421* curr;
@@ -122,12 +117,4 @@ long delete_buffer_421() {
 		return 0;
 	}
 	return -1;
-}
-
-int main() {
-	init_buffer_421();
-	insert_buffer_421(1);
-	print_buffer_421();
-	delete_buffer_421();
-	return 0;
 }
