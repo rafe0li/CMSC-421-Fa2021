@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "buffer.h"
 
+#define HALF_SIZE_BUFFER 10
 struct ring_buffer_421 BUFF;
 
 /* Initializes a circular buffer with nodes
@@ -84,10 +85,9 @@ long print_buffer_421() {
 	// Fails if buffer uninitialized
 	if (BUFF.read == NULL) {
 		perror("ERROR: Buffer uninitialized, cannot print");
-		//return -1;
 	}
 	else {
-		// Prints buffer
+		// Prints first half on one line, second half on next
 		for (i = 0; i < SIZE_OF_BUFFER; i++) {
 			printf(" %d. [%d]\n", i + 1, curr->data);
 			curr = curr->next;
@@ -103,8 +103,11 @@ long print_buffer_421() {
 */
 long delete_buffer_421() {
 	// Fails if buffer uninitialized
-	if (BUFF.read != NULL) {
-		printf("\n\nDELETE!!!!!\n\n");
+	if (BUFF.read == NULL) {
+		perror("ERROR: Buffer is uninitialized, cannot delete");
+		//return -1;
+	}
+	else {
 		int i;
 		struct node_421* curr;
 		struct node_421* prev;
@@ -119,10 +122,9 @@ long delete_buffer_421() {
 		}
 		BUFF.read = NULL;
 		BUFF.write = NULL;
+
 		//return 0;
 	}
-	perror("ERROR: Buffer is uninitialized, cannot delete");
-	//return -1;
 }
 
 int main() {
