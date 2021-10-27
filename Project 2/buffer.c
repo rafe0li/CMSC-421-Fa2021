@@ -122,6 +122,7 @@ long delete_buffer_421() {
 		}
 		BUFF.read = NULL;
 		BUFF.write = NULL;
+		BUFF.length = 0;
 
 		//return 0;
 	}

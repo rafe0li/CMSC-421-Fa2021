@@ -112,11 +112,12 @@ SYSCALL_DEFINE0(delete_buffer_421) {
 			prev = curr;
 			curr = curr->next;
 			if (prev) {
-				free(prev);
+				kfree(prev);
 			}
 		}
 		BUFF.read = NULL;
 		BUFF.write = NULL;
+		BUFF.length = 0;
 
 		return 0;
 	}
