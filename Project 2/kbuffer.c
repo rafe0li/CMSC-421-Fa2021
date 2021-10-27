@@ -1,5 +1,5 @@
-#include <include/linux/syscalls.h>
-#include <include/linux/kernel.h>
+#include <linux/syscalls.h>
+#include <linux/kernel.h>
 #include "buffer.h"
 
 #define HALF_SIZE_BUFFER 10
@@ -9,14 +9,14 @@ struct ring_buffer_421 BUFF;
 *  that hold an int. Tail node points to head
 */
 SYSCALL_DEFINE0(init_buffer_421) {
+	int i;
+	struct node_421* curr;
+	struct node_421* prev;
+
 	// Fails if buffer already initialized
 	if (BUFF.read != NULL) {
 		return -1;
 	}
-
-	int i;
-	struct node_421* curr;
-	struct node_421* prev;
 
 	for (i = 0; i < SIZE_OF_BUFFER; i++) {
 		// Create new node for each index
@@ -51,13 +51,13 @@ SYSCALL_DEFINE0(init_buffer_421) {
 
 /* Inserts integer into buffer, increases length
 *  and position of write pointer.
-*  Fails if buffer is full.
+*  Fails if buffer is full or uninitialized.
 *
 * @param[in] i int to write into next node
 */
-SYSCALL_DEFINE0(insert_buffer_421) {
-	// Fails if buffer is full
-	if (BUFF.read == BUFF.write) {
+SYSCALL_DEFINE1(insert_buffer_421, int, i) {
+	// Fails if buffer is full or uninitialized
+	if (BUFF.length == SIZE_OF_BUFFER || BUFF.read == NULL) {
 		return -1;
 	}
 
@@ -73,26 +73,26 @@ SYSCALL_DEFINE0(insert_buffer_421) {
 *  Fails if buffer is uninitialized.
 */
 SYSCALL_DEFINE0(print_buffer_421) {
+	int i;
+	struct node_421* curr;
+
+	curr = BUFF.read;
 	// Fails if buffer already initialized
 	if (BUFF.read == NULL) {
 		return -1;
 	}
-
-	int i;
-	struct node_421* curr;
-	curr = BUFF.read;
 
 	// Prints first half on one line, second half on next
 	for (i = 0; i < HALF_SIZE_BUFFER; i++) {
 		printk(" %d. [%d]\t", i + 1, curr->data);
 		curr = curr->next;
 	}
-	printf("\n");
+	printk("\n");
 	for (i = HALF_SIZE_BUFFER; i < SIZE_OF_BUFFER; i++) {
 		printk("%d. [%d]\t", i + 1, curr->data);
 		curr = curr->next;
 	}
-	printf("\n\n");
+	printk("\n\n");
 
 	return 0;
 }
@@ -100,13 +100,14 @@ SYSCALL_DEFINE0(print_buffer_421) {
 /* Deallocates all memory used in circular buffer.
 *  Fails if buffer is uninitialized.
 */
-SYSCALL_DEFINE0(delete_buffer_421)
+SYSCALL_DEFINE0(delete_buffer_421) {
 	// Fails if buffer uninitialized
 	if (BUFF.read != NULL) {
+		int i;
 		struct node_421* curr;
 		struct node_421* prev;
+
 		curr = BUFF.read;
-		int i;
 		for (i = 0; i < SIZE_OF_BUFFER; i++) {
 			prev = curr;
 			curr = curr->next;
