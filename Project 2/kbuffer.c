@@ -99,25 +99,25 @@ SYSCALL_DEFINE0(print_buffer_421) {
 */
 SYSCALL_DEFINE0(delete_buffer_421) {
 	// Fails if buffer uninitialized
-	if (BUFF.read != NULL) {
+	if (BUFF.read == NULL) {
+		return -1;
+	}
+	else {
 		int i;
 		struct node_421* curr;
 		struct node_421* prev;
 
-		// Deallocates buffer
 		curr = BUFF.read;
 		for (i = 0; i < SIZE_OF_BUFFER; i++) {
 			prev = curr;
 			curr = curr->next;
 			if (prev) {
-				kfree(prev);
+				free(prev);
 			}
 		}
-		// Condition for other syscalls to check initialization
 		BUFF.read = NULL;
 		BUFF.write = NULL;
 
 		return 0;
 	}
-	return -1;
 }
