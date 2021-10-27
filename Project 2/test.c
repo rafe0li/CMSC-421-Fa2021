@@ -29,8 +29,17 @@ long sys_delete_buffer_421(void) {
 int main(int argc, char* argv[]) {
     long call;
 
+    // Test inserting into an uninitialized buffer
+    call = sys_insert_buffer_421(1);
+    if (call < 0) {
+        perror("ERROR: Buffer is full or uninitialized, cannot insert");
+    }
+    else {
+        printf("insert_buffer ran successfully, check dmesg output\n");
+    }
+
     // Test printing a uninitialized buffer
-    call = sys_print_buffer_421(void);
+    call = sys_print_buffer_421();
     if (call < 0) {
         perror("ERROR: Buffer uninitialized, cannot print");
     }
@@ -47,14 +56,7 @@ int main(int argc, char* argv[]) {
         printf("delete_buffer ran successfully, check dmesg output\n");
     }
 
-    // Test inserting into an uninitialized buffer
-    call = sys_insert_buffer_421(1);
-    if (call < 0) {
-        perror("ERROR: Buffer is full or uninitialized, cannot insert");
-    }
-    else {
-        printf("insert_buffer ran successfully, check dmesg output\n");
-    }
+
 
     // Test init
     call = sys_init_buffer_421();
@@ -87,6 +89,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
+
+
     // Test inserting into full buffer
     call = sys_insert_buffer_421(1);
     if (call < 0) {
@@ -114,13 +118,13 @@ int main(int argc, char* argv[]) {
         printf("delete_buffer ran successfully, check dmesg output\n");
     }
 
-    // Test deleting a deleted buffer
-    call = sys_delete_buffer_421();
+    // Test inserting into deleted buffer
+    call = sys_insert_buffer_421(1);
     if (call < 0) {
-        perror("ERROR: Buffer is uninitialized, cannot delete");
+        perror("ERROR: Buffer is full or uninitialized, cannot insert");
     }
     else {
-        printf("delete_buffer ran successfully, check dmesg output\n");
+        printf("insert_buffer ran successfully, check dmesg output\n");
     }
 
     // Test printing a deleted buffer
@@ -132,13 +136,13 @@ int main(int argc, char* argv[]) {
         printf("print_buffer ran successfully, check dmesg output\n");
     }
 
-    // Test inserting into deleted buffer
-    call = sys_insert_buffer_421(1);
+    // Test deleting a deleted buffer
+    call = sys_delete_buffer_421();
     if (call < 0) {
-        perror("ERROR: Buffer is full or uninitialized, cannot insert");
+        perror("ERROR: Buffer is uninitialized, cannot delete");
     }
     else {
-        printf("insert_buffer ran successfully, check dmesg output\n");
+        printf("delete_buffer ran successfully, check dmesg output\n");
     }
 
     return 0;
