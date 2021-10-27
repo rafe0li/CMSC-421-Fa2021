@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     // Test insert, fills buffer
     int i;
     for (i = 0; i < 20; i++) {
-        call = sys_insert_buffer_421(1);
+        call = sys_insert_buffer_421(i);
         if (call < 0) {
             perror("ERROR: Buffer is full or uninitialized, cannot insert");
         }
