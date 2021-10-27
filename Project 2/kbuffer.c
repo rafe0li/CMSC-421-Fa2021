@@ -2,7 +2,6 @@
 #include <linux/kernel.h>
 #include "buffer.h"
 
-#define HALF_SIZE_BUFFER 10
 struct ring_buffer_421 BUFF;
 
 /* Initializes a circular buffer with nodes
@@ -32,12 +31,14 @@ SYSCALL_DEFINE0(init_buffer_421) {
 			BUFF.write = curr;
 			prev = curr;
 		}
+
 		// Last insertion
 		// Set node to point to head, creates circle
 		else if (i + 1 == SIZE_OF_BUFFER) {
 			prev->next = curr;
 			curr->next = BUFF.read;
 		}
+
 		// Every other insertion
 		// Link previous node to the current node
 		else {
@@ -77,19 +78,15 @@ SYSCALL_DEFINE0(print_buffer_421) {
 	struct node_421* curr;
 
 	curr = BUFF.read;
+
 	// Fails if buffer already initialized
 	if (BUFF.read == NULL) {
 		return -1;
 	}
 
-	// Prints first half on one line, second half on next
-	for (i = 0; i < HALF_SIZE_BUFFER; i++) {
-		printk(" %d. [%d]\t", i + 1, curr->data);
-		curr = curr->next;
-	}
-	printk("\n");
-	for (i = HALF_SIZE_BUFFER; i < SIZE_OF_BUFFER; i++) {
-		printk("%d. [%d]\t", i + 1, curr->data);
+	// Prints buffer
+	for (i = 0; i < SIZE_OF_BUFFER; i++) {
+		printk(" %d. [%d]\n", i + 1, curr->data);
 		curr = curr->next;
 	}
 	printk("\n\n");
@@ -107,6 +104,7 @@ SYSCALL_DEFINE0(delete_buffer_421) {
 		struct node_421* curr;
 		struct node_421* prev;
 
+		// Deallocates buffer
 		curr = BUFF.read;
 		for (i = 0; i < SIZE_OF_BUFFER; i++) {
 			prev = curr;
@@ -115,6 +113,10 @@ SYSCALL_DEFINE0(delete_buffer_421) {
 				kfree(prev);
 			}
 		}
+		// Condition for other syscalls to check initialization
+		BUFF.read = NULL;
+		BUFF.write = NULL;
+
 		return 0;
 	}
 	return -1;

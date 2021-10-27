@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include "buffer.h"
 
-#define HALF_SIZE_BUFFER 10
 struct ring_buffer_421 BUFF;
 
 /* Initializes a circular buffer with nodes
@@ -85,9 +84,10 @@ long print_buffer_421() {
 	// Fails if buffer uninitialized
 	if (BUFF.read == NULL) {
 		perror("ERROR: Buffer uninitialized, cannot print");
+		//return -1;
 	}
 	else {
-		// Prints first half on one line, second half on next
+		// Prints buffer
 		for (i = 0; i < SIZE_OF_BUFFER; i++) {
 			printf(" %d. [%d]\n", i + 1, curr->data);
 			curr = curr->next;
