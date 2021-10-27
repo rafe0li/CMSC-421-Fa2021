@@ -88,13 +88,8 @@ long print_buffer_421() {
 	}
 	else {
 		// Prints first half on one line, second half on next
-		for (i = 0; i < HALF_SIZE_BUFFER; i++) {
-			printf(" %d. [%d]\t", i + 1, curr->data);
-			curr = curr->next;
-		}
-		printf("\n");
-		for (i = HALF_SIZE_BUFFER; i < SIZE_OF_BUFFER; i++) {
-			printf("%d. [%d]\t", i + 1, curr->data);
+		for (i = 0; i < SIZE_OF_BUFFER; i++) {
+			printf(" %d. [%d]\n", i + 1, curr->data);
 			curr = curr->next;
 		}
 		printf("\n\n");
@@ -109,6 +104,7 @@ long print_buffer_421() {
 long delete_buffer_421() {
 	// Fails if buffer uninitialized
 	if (BUFF.read != NULL) {
+		printf("\n\nDELETE!!!!!\n\n");
 		int i;
 		struct node_421* curr;
 		struct node_421* prev;
@@ -121,6 +117,8 @@ long delete_buffer_421() {
 				free(prev);
 			}
 		}
+		BUFF.read = NULL;
+		BUFF.write = NULL;
 		//return 0;
 	}
 	perror("ERROR: Buffer is uninitialized, cannot delete");
@@ -128,7 +126,28 @@ long delete_buffer_421() {
 }
 
 int main() {
+	// Test insert, print, and delete on uninitialized buffer
+	insert_buffer_421(1);
+	print_buffer_421();
+	delete_buffer_421();
+
+	// Initialize buffer, test initializing again
 	init_buffer_421();
+	init_buffer_421();
+	// Fills buffer with values
+	int i;
+	for (i = 0; i < SIZE_OF_BUFFER; i++) {
+		insert_buffer_421(i);
+	}
+
+	// Test inserting into full buffer
+	insert_buffer_421(1);
+	// Print full buffer
+	print_buffer_421();
+	// Delete buffer
+	delete_buffer_421();
+
+	// Test insert, print, and delete on deleted buffer
 	insert_buffer_421(1);
 	print_buffer_421();
 	delete_buffer_421();
