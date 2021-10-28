@@ -79,18 +79,22 @@ SYSCALL_DEFINE0(print_buffer_421) {
 
 	curr = BUFF.read;
 
-	// Fails if buffer already initialized
+	// Fails if buffer uninitialized
 	if (BUFF.read == NULL) {
 		return -1;
 	}
-
-	// Prints buffer
-	for (i = 0; i < SIZE_OF_BUFFER; i++) {
-		printk(" %d. [%d]\n", i + 1, curr->data);
+	else {
+		i = 1;
+		// Prints buffer
+		printk(" %d. [%d]\n", i, curr->data);
 		curr = curr->next;
+		while (curr != BUFF.read) {
+			printk(" %d. [%d]\n", i, curr->data);
+			curr = curr->next;
+			i++;
+		}
+		printk("\n\n");
 	}
-	printk("\n\n");
-
 	return 0;
 }
 
