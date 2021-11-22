@@ -12,8 +12,8 @@ extern "C" {
 #endif
 
 #ifndef __KERNEL__
-void producer(char*);
-void consumer();
+void *produce(void*);
+void *consume(void*);
 
 #ifdef __cplusplus
 }
