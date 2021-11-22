@@ -9,9 +9,11 @@ int CURR_VAL = 0;
 void* produce(void* arg) {
 	// Generates 1024 byte block of data
 	int i;
+	// Convert int to equivalent (0-9) char
+	char val = CURR_VAL + '0';
 	char* block = (char*)malloc(sizeof(char*) * DATA_LENGTH);
-	memset(block, CURR_VAL, DATA_LENGTH);
-	printf("\nBLOCK: [%c]\n", block);
+	memset(block, val, (sizeof(char*) * DATA_LENGTH));
+	printf("\nBLOCK: [%s]\n", block);
 	CURR_VAL++;
 }
 
