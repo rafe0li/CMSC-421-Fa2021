@@ -16,7 +16,7 @@ void* produce(void* arg) {
 
 		// Create 1024 byte char block
 		char val = CURR_VAL + '0';
-		char* block = (char*)malloc(sizeof(char*) * DATA_LENGTH);
+		char* block = (char*)malloc(sizeof(char) * DATA_LENGTH);
 		memset(block, val, DATA_LENGTH);
 
 		// Wait 0-100 milliseconds before each operation
@@ -30,10 +30,7 @@ void* produce(void* arg) {
 			CURR_VAL = 0;
 		}
 		free(block);
-
-		printf("\nBUFFER: ");
 		print_queue();
-		printf("\n");
 		printf("\nLEFT PRODUCER\n");
 	}
 }
@@ -43,7 +40,7 @@ void* consume(void* arg) {
 	for (i = 0; i < 2; i++) {
 		printf("\nENTERED CONSUMER\n");
 		unsigned int stop;
-		char* block = (char*)malloc(sizeof(char*) * DATA_LENGTH);
+		char* block = (char*)malloc(sizeof(char) * DATA_LENGTH);
 
 		// Wait 0-100 milliseconds before each operation
 		stop = rand() % 10000;
@@ -51,12 +48,9 @@ void* consume(void* arg) {
 
 		// Dequeues and consumes data block
 		dequeue_buffer_421(block);
-		printf("\nCONSUMED BLOCK: [%s]\n", block);
+		printf("\nBLOCK: [%.*s]\n", DATA_LENGTH, block);
 		free(block);
-
-		printf("\nBUFFER: ");
 		print_queue();
-		printf("\n");
 		printf("\nLEFT CONSUMER\n");
 	}
 }
@@ -69,6 +63,7 @@ int main(void) {
 	pthread_create(&t2, NULL, consume, NULL);
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
+
 	delete_buffer_421();
 	return 0;
 }

@@ -63,6 +63,10 @@ long enqueue_buffer_421(char * data) {
 
 	sem_post(&mutex);
 
+	if (buffer.length == 20) {
+		sem_post(&empty_count);
+	}
+
 	//return 0;
 }
 
@@ -85,6 +89,7 @@ long dequeue_buffer_421(char * data) {
 
 	// Copies data from buffer into "data" param
 	memcpy(data, buffer.read->data, DATA_LENGTH);
+	buffer.length--;
 
 	// Moves all values up in queue
 	curr = buffer.read;
@@ -96,7 +101,7 @@ long dequeue_buffer_421(char * data) {
 
 	sem_post(&mutex);
 
-	if (buffer.length == 20) {
+	if (buffer.length == 0) {
 		sem_post(&fill_count);
 	}
 
@@ -142,10 +147,18 @@ void print_semaphores(void) {
 }
 
 void print_queue(void) {
+	int i = 0;
 	node_421_t* curr = buffer.read;
+	printf("\nPRINT_QUEUE\nCURRENT BUFFER (first value displayed)\n");
 	while (curr->next != buffer.read) {
-		printf("[%s]  ", curr->data);
+		if (i < buffer.length) {
+			printf("[%.1s]  ", curr->data);
+		}
+		else {
+			printf("[ ]  ");
+		}
 		curr = curr->next;
+		i++;
 	}
 	printf("\n");
 }
