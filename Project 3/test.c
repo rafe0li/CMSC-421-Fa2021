@@ -1,52 +1,69 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
 #include "test.h"
 #include "buffer_user.c"
 
-// Only read/write to by producer
-// Input values for char blocks
+// Only modified by producer
+// Input values for data blocks
 int CURR_VAL = 0;
 
 void* produce(void* arg) {
-	// Generates 1024 byte block of data
-	int i;
-	// Converts int to equivalent (0-9) char
+	printf("\nENTERED PRODUCER THREAD\n");
+	int stop;
+
+	// Create 1024 byte char block
 	char val = CURR_VAL + '0';
 	char* block = (char*)malloc(sizeof(char*) * DATA_LENGTH);
-	memset(block, val, (sizeof(char*) * DATA_LENGTH));
-	printf("\nBLOCK: [%s]\n", block);
+	memset(block, val, DATA_LENGTH);
+
+	// Wait 0-100 milliseconds before each operation
+	stop = rand() % 10000;
+	usleep(stop);
+
+	printf("\nBEFORE ENQUEUE\n");
+	enqueue_buffer_421(block);
+	printf("\nAFTER ENQUEUE\n");
 	CURR_VAL++;
+	if (CURR_VAL == 10) {
+		CURR_VAL = 0;
+	}
+
+	printf("\nENQUEUE: ");
+	print_queue();
+	printf("\n");
+	printf("\nLEFT PRODUCER THREAD\n");
 }
 
 void* consume(void* arg) {
+	printf("\nENTERED CONSUMER THREAD\n");
+	int stop;
+	char* block;
 
+	// Wait 0-100 milliseconds before each operation
+	stop = rand() % 10000;
+	usleep(stop);
+
+	// Dequeues and consumes
+	dequeue_buffer_421(block);
+	free(block);
+
+	printf("\nDEQUEUE: ");
+	print_queue();
+	printf("\n");
+	printf("\nLEFT CONSUMER THREAD\n");
 }
 
 int main(void) {
-	char* result = (char*)malloc(sizeof(char*) * DATA_LENGTH);
 	init_buffer_421();
-	//pthread_t t1, t2;
-	//pthread_create(&t1, NULL, produce, 0);
-	//pthread_create(&t2, NULL, consume, 0);
-	//pthread_join(t1, NULL);
-	//pthread_join(t2, NULL);
 	print_semaphores();
-	
-	enqueue_buffer_421("1");
-	print_queue();
-	enqueue_buffer_421("2");
-	print_queue();
-	enqueue_buffer_421("3");
-	print_queue();
-	enqueue_buffer_421("4");
-	print_queue();
-	dequeue_buffer_421(result);
-	print_queue();
-	printf("\nDEQUEUED VALUE: [%s]\n", result);
-
-	if (result) {
-		free(result);
-	}
-
+	pthread_t t1, t2;
+	pthread_create(&t1, NULL, produce, NULL);
+	sleep(4);
+	pthread_create(&t2, NULL, consume, NULL);
+	pthread_join(t1, NULL);
+	pthread_join(t2, NULL);
+	print_semaphores();
 	delete_buffer_421();
 	return 0;
 }

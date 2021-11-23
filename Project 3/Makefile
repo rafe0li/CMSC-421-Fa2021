@@ -1,5 +1,5 @@
 make:
-	gcc test.c -lpthread -lrt
+	gcc test.c -pthread -o test 
 
 clean:
 	rm test.o

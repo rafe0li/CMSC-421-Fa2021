@@ -35,24 +35,33 @@ long init_buffer_421(void) {
 	buffer.length = 0;
 
 	// Initialize semaphores
-	sem_init(&mutex, 0, 0);
-	sem_init(&fill_count, 0, 0);
-	sem_init(&empty_count, 0, 0);
+	sem_init(&mutex, 0, 1);
+	sem_init(&fill_count, 0, 1);
+	sem_init(&empty_count, 0, 1);
 
 	//return 0;
 }
 
 long enqueue_buffer_421(char * data) {
-	// NOTE: You have to modify this function to use semaphores.
 	if (!buffer.write) {
 		printf("enqueue_buffer_421(): The buffer does not exist. Aborting.\n");
 		//return -1;
 	}
 
+	// If buffer full, wait for dequeue
+	if (buffer.length == 20) {
+		sem_wait(&fill_count)
+	}
+
+	sem_wait(&mutex);
+
 	memcpy(buffer.write->data, data, DATA_LENGTH);
 	// Advance the pointer.
 	buffer.write = buffer.write->next;
 	buffer.length++;
+
+	sem_post(&mutex);
+	sem_post(&empty_count);
 
 	//return 0;
 }
@@ -67,6 +76,11 @@ long dequeue_buffer_421(char * data) {
 		//return -1;
 	}
 
+	if (buffer.length == 0) {
+		sem_wait(&empty_count)
+	}
+	sem_wait(&mutex);
+
 	// Copies data from buffer into "data" param
 	memcpy(data, buffer.read->data, DATA_LENGTH);
 
@@ -77,6 +91,9 @@ long dequeue_buffer_421(char * data) {
 		curr = curr->next;
 		memcpy(prev->data, curr->data, DATA_LENGTH);
 	}
+
+	sem_post(&mutex);
+	sem_post(&fill_count);
 
 	//return 0;
 }
