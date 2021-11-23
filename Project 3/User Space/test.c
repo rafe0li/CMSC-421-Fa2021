@@ -1,3 +1,16 @@
+/*
+* @author Rafael Li, rafaell1@umbc.edu
+* @test.c
+* Process which runs two threads, a producer and
+* a consumer. The producer thread enqueues 1024 byte long
+* char* into a circular buffer, and the consumer dequeues
+* these blocks, prints them out, and deallocates them.
+* Threads run concurrently and are protected by semaphores
+* - conditions include mutual exclusion for access, a full buffer,
+* and an empty buffer. If full, producer blocks and waits for consumer,
+* vice versa.
+*
+*/
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -8,6 +21,10 @@
 // Input values for data blocks
 int CURR_VAL = 0;
 
+/**
+ * Produce a 1024 byte char* to enqueue into circular buffer.
+ * @param[in] arg void*, for threading
+ */
 void* produce(void* arg) {
 	while (1) {
 		printf("\nENTERED PRODUCER\n");
@@ -29,11 +46,15 @@ void* produce(void* arg) {
 			CURR_VAL = 0;
 		}
 		free(block);
-		print_queue();
+		print_buffer_421();
 		printf("\nLEFT PRODUCER\n");
 	}
 }
 
+/**
+ * Dequeue the next value in the buffer and consume it (print it out).
+* @param[in] arg void*, for threading
+ */
 void* consume(void* arg) {
 	while (1) {
 		printf("\nENTERED CONSUMER\n");
@@ -48,7 +69,7 @@ void* consume(void* arg) {
 		dequeue_buffer_421(block);
 		printf("\nBLOCK: [%.*s]\n", DATA_LENGTH, block);
 		free(block);
-		print_queue();
+		print_buffer_421();
 		printf("\nLEFT CONSUMER\n");
 	}
 }

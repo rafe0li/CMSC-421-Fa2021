@@ -1,7 +1,18 @@
+/*
+* @author Rafael Li, rafaell1@umbc.edu
+* @buffer_user.c
+* Circular buffer of 20 nodes that hold 1024 byte
+* char*. Enqueueing and deqeueing are thread safe,
+* protected by semaphores. Enqueue will block if the
+* buffer is full and call dequeue, and vice versa for
+* an empty buffer.
+*
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "buffer.h"
+#include "buffer_util.h"
 
 static ring_buffer_421_t buffer;
 static sem_t mutex;
@@ -147,7 +158,7 @@ void print_semaphores(void) {
 	//return;
 }
 
-void print_queue(void) {
+void print_buffer_421(void) {
 	int i = 0;
 	node_421_t* curr = buffer.read;
 	printf("\nPRINT_QUEUE\nCURRENT BUFFER\n");
