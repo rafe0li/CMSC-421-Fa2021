@@ -48,9 +48,10 @@ long enqueue_buffer_421(char * data) {
 		//return -1;
 	}
 
-	// If buffer full, wait for dequeue
+	// If buffer empty, signal enqueue and wait
 	if (buffer.length == 20) {
-		sem_wait(&fill_count)
+		sem_post(&empty_count);
+		sem_wait(&fill_count);
 	}
 
 	sem_wait(&mutex);
@@ -61,7 +62,6 @@ long enqueue_buffer_421(char * data) {
 	buffer.length++;
 
 	sem_post(&mutex);
-	sem_post(&empty_count);
 
 	//return 0;
 }
@@ -76,8 +76,10 @@ long dequeue_buffer_421(char * data) {
 		//return -1;
 	}
 
+	// If buffer empty, signal enqueue and wait
 	if (buffer.length == 0) {
-		sem_wait(&empty_count)
+		sem_post(&fill_count);
+		sem_wait(&empty_count);
 	}
 	sem_wait(&mutex);
 
@@ -93,7 +95,10 @@ long dequeue_buffer_421(char * data) {
 	}
 
 	sem_post(&mutex);
-	sem_post(&fill_count);
+
+	if (buffer.length == 20) {
+		sem_post(&fill_count);
+	}
 
 	//return 0;
 }
