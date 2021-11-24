@@ -55,6 +55,7 @@ int CURR_VAL = 0;
  */
 void* produce(void* arg) {
 	int i;
+	long call;
 	for (i = 0; i < 100000; i++) {
 		unsigned int stop;
 		// Create temp 1024 byte char block to enqueue
@@ -68,7 +69,13 @@ void* produce(void* arg) {
 
 		// Enqueue and increment input value
 		printf("\n:: Enqueueing element into buffer. ::");
-		enqueue_buffer_421(block);
+		call = sys_enqueue_buffer_421(1);
+		if (call < 0) {
+			perror("ERROR WITH ENQUEUEING");
+		}
+		else {
+			printf("enqueue_buffer ran successfully, check dmesg output\n");
+		}
 		CURR_VAL++;
 		if (CURR_VAL == 10) {
 			CURR_VAL = 0;
@@ -76,7 +83,13 @@ void* produce(void* arg) {
 		printf("\n%.10s...", block);
 
 		// Print buffer result and free temp block
-		print_buffer_421();
+		call = sys_print_buffer_421(1);
+		if (call < 0) {
+			perror("ERROR WITH PRINTING");
+		}
+		else {
+			printf("print_buffer ran successfully, check dmesg output\n");
+		}
 		free(block);
 	}
 }
@@ -87,6 +100,7 @@ void* produce(void* arg) {
  */
 void* consume(void* arg) {
 	int i;
+	long call;
 	for (i = 0; i < 100000; i++) {
 		unsigned int stop;
 		char* block = (char*)malloc(sizeof(char) * DATA_LENGTH);
@@ -97,12 +111,24 @@ void* consume(void* arg) {
 
 		// Dequeues and consumes data block
 		printf("\n:: Dequeueing element from buffer. ::");
-		dequeue_buffer_421(block);
+		call = sys_dequeue_buffer_421(1);
+		if (call < 0) {
+			perror("ERROR WITH DEQUEUEING");
+		}
+		else {
+			printf("dequeue_buffer ran successfully, check dmesg output\n");
+		}
 		printf("\n%.10s...", block);
 		free(block);
 
-		// Print buffer
-		print_buffer_421();
+		// Print buffer result
+		call = sys_print_buffer_421(1);
+		if (call < 0) {
+			perror("ERROR WITH PRINTING");
+		}
+		else {
+			printf("print_buffer ran successfully, check dmesg output\n");
+		}
 	}
 }
 
