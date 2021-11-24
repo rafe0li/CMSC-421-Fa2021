@@ -38,16 +38,14 @@ void* produce(void* arg) {
 		stop = rand() % 10000;
 		usleep(stop);
 
-		// Enqueue and increment input value
-		printf("\n:: Enqueueing element into buffer. ::");
+		// Enqueue, increment input value, and prints buffer
+		printf("\n\n:: Enqueueing element into buffer. ::");
+		printf("\nPRODUCED BLOCK = [%.10s...]", block);
 		enqueue_buffer_421(block);
 		CURR_VAL++;
 		if (CURR_VAL == 10) {
 			CURR_VAL = 0;
 		}
-		printf("\n%.10s...", block);
-
-		// Print buffer result and free temp block
 		print_buffer_421();
 		free(block);
 	}
@@ -67,14 +65,12 @@ void* consume(void* arg) {
 		stop = rand() % 10000;
 		usleep(stop);
 
-		// Dequeues and consumes data block
-		printf("\n:: Dequeueing element from buffer. ::");
+		// Dequeues, consumes data block, and prints buffer
+		printf("\n\n:: Dequeueing element from buffer. ::");
 		dequeue_buffer_421(block);
-		printf("\n%.10s...", block);
-		free(block);
-
-		// Print buffer
+		printf("\nCONSUMED BLOCK = [%.10s...]\n", block);
 		print_buffer_421();
+		free(block);
 	}
 }
 

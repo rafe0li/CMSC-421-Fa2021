@@ -49,8 +49,8 @@ long init_buffer_421(void) {
 
 	// Initialize semaphores
 	sem_init(&mutex, 0, 1);
-	sem_init(&fill_count, 0, 1);
-	sem_init(&empty_count, 0, 1);
+	sem_init(&fill_count, 0, 0);
+	sem_init(&empty_count, 0, 20);
 
 	//return 0;
 }
@@ -65,13 +65,8 @@ long enqueue_buffer_421(char * data) {
 		//return -1;
 	}
 
-	// If buffer empty, block and signal enqueue
-	if (buffer.length == 20) {
-		sem_post(&empty_count);
-		sem_wait(&fill_count);
-	}
-
-	// Mutex ensures exclusive access to buffer
+	// Wait for access to buffer and signal from dequeue if buffer full
+	sem_wait(&empty_count);
 	sem_wait(&mutex);
 
 	// Allocates memory for char* block and copies
@@ -82,13 +77,12 @@ long enqueue_buffer_421(char * data) {
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
-	// Buffer unlocked and thread waiting for buffer signaled
-	sem_post(&mutex);
+	// Print buffer
+	print_buffer_421();
 
-	// If the last enqueue filled the buffer, signal dequeue
-	if (buffer.length == 20) {
-		sem_post(&empty_count);
-	}
+	// Unlocks buffer and signals dequeue
+	sem_post(&mutex);
+	sem_post(&fill_count);
 
 	//return 0;
 }
@@ -107,12 +101,8 @@ long dequeue_buffer_421(char * data) {
 		//return -1;
 	}
 
-	// If buffer empty, signal enqueue and wait
-	if (buffer.length == 0) {
-		sem_post(&fill_count);
-		sem_wait(&empty_count);
-	}
-
+	// Wait for access to buffer and signal from enqueue if buffer empty
+	sem_wait(&fill_count);
 	sem_wait(&mutex);
 
 	// Copies data from buffer into param
@@ -127,12 +117,9 @@ long dequeue_buffer_421(char * data) {
 		memcpy(prev->data, curr->data, DATA_LENGTH);
 	}
 
+	// Unlocks buffer and signals enqueue
 	sem_post(&mutex);
-
-	// If the last dequeue emptied the buffer, signal enqueue
-	if (buffer.length == 0) {
-		sem_post(&fill_count);
-	}
+	sem_post(&empty_count);
 
 	//return 0;
 }
@@ -160,6 +147,10 @@ long delete_buffer_421(void) {
 	buffer.read = NULL;
 	buffer.write = NULL;
 	buffer.length = 0;
+
+	sem_destroy(&mutex);
+	sem_destroy(&fill_count);
+	sem_destroy(&empty_count);
 	//return 0;
 }
 
