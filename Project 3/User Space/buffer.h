@@ -1,6 +1,7 @@
 /*
 * @author Rafael Li, rafaell1@umbc.edu
 * @buffer.h
+* USER VERSION
 * UNEDITED
 * Prewritten header for circular buffer.
 * 

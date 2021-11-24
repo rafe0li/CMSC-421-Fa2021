@@ -1,6 +1,7 @@
 /*
 * @author Rafael Li, rafaell1@umbc.edu
 * @buffer_user.c
+* USER VERSION
 * Circular buffer of 20 nodes that hold 1024 byte
 * char*. Enqueueing and deqeueing are thread safe,
 * protected by semaphores. Enqueue will block if the

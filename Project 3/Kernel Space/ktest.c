@@ -1,6 +1,7 @@
 /*
 * @author Rafael Li, rafaell1@umbc.edu
 * @test.c
+* KERNEL VERSION
 * Process which runs two threads, a producer and
 * a consumer. The producer thread enqueues 1024 byte long
 * char* into a circular buffer, and the consumer dequeues

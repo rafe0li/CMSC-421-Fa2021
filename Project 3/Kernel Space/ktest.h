@@ -1,6 +1,7 @@
 /*
 * @author Rafael Li, rafaell1@umbc.edu
 * @test.h
+* KERNEL VERSION
 * Header for producer/consumer threading process.
 *
 */

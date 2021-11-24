@@ -1,4 +1,5 @@
-#@author Rafael Li, rafaell1@umbc.edu
-#@Makefile
-#Makefile for syscalls, kernel space.
+# @author Rafael Li, rafaell1@umbc.edu
+# @Makefile
+# KERNEL VERSION
+# Makefile for syscalls, kernel space.
 obj-y := buffer.o

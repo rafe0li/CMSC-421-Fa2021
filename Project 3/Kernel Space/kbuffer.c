@@ -1,6 +1,7 @@
 /*
 * @author Rafael Li, rafaell1@umbc.edu
 * @buffer_user.c
+* KERNEL VERSION
 * Circular buffer of 20 nodes that hold 1024 byte
 * char*. Enqueueing and deqeueing are thread safe,
 * protected by semaphores. Enqueue will block if the
@@ -49,8 +50,8 @@ SYSCALL_DEFINE0(init_buffer_421) {
 
 	// Initialize semaphores
 	sema_init(&mutex, 1);
-	sema_init(&fill_count, 1);
-	sema_init(&empty_count, 1);
+	sema_init(&fill_count, 0);
+	sema_init(&empty_count, 20);
 
 	return 0;
 }
@@ -65,13 +66,8 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 		return -1;
 	}
 
-	// If buffer empty, block and signal enqueue
-	if (buffer.length == 20) {
-		up(&empty_count);
-		down(&fill_count);
-	}
-
-	// Mutex ensures exclusive access to buffer
+	// Wait for access to buffer and signal from dequeue if buffer full
+	down(&empty_count);
 	down(&mutex);
 
 	// Allocates memory for char* block and copies
@@ -82,13 +78,9 @@ SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
-	// Buffer unlocked and thread waiting for buffer signaled
+	// Unlocks buffer and signals dequeue
 	up(&mutex);
-
-	// If the last enqueue filled the buffer, signal dequeue
-	if (buffer.length == 20) {
-		up(&empty_count);
-	}
+	up(&fill_count);
 
 	return 0;
 }
@@ -107,12 +99,8 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 		return -1;
 	}
 
-	// If buffer empty, signal enqueue and wait
-	if (buffer.length == 0) {
-		up(&fill_count);
-		down(&empty_count);
-	}
-
+	// Wait for access to buffer and signal from enqueue if buffer empty
+	down(&fill_count);
 	down(&mutex);
 
 	// Copies data from buffer into param
@@ -127,12 +115,9 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 		memcpy(prev->data, curr->data, DATA_LENGTH);
 	}
 
+	// Unlocks buffer and signals enqueue
 	up(&mutex);
-
-	// If the last dequeue emptied the buffer, signal enqueue
-	if (buffer.length == 0) {
-		up(&fill_count);
-	}
+	up(&empty_count);
 
 	return 0;
 }
@@ -167,25 +152,18 @@ SYSCALL_DEFINE0(delete_buffer_421) {
  * Prints all values in nodes, does not read nonexistent entries.
  */
 SYSCALL_DEFINE0(print_buffer_421) {
-	if (!buffer.read) {
-		printk("print_buffer_421(): The buffer does not exist. Aborting.\n");
-		return -1;
-	}
-	
 	int i = 0;
 	node_421_t* curr = buffer.read;
-	printk("\nPRINT_QUEUE\nCURRENT BUFFER\n");
+	printf("\nPRINT_QUEUE(): CURRENT BUFFER\n");
 	while (curr->next != buffer.read) {
 		if (i < buffer.length) {
-			printk("[%.1s]  ", curr->data);
+			printf("[%.1s]  ", curr->data);
 		}
 		else {
-			printk("[ ]  ");
+			printf("[ ]  ");
 		}
 		curr = curr->next;
 		i++;
 	}
-	printk("\n");
-
-	return 0;
+	printf("\n");
 }
