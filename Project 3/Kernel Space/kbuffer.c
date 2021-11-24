@@ -1,5 +1,5 @@
 /*
-* @author Rafael Li, rafaell1@umbc.edu
+* @authors Rafael Li, rafaell1@umbc.edu and Kelly Snyder, ks16@umbc.edu
 * @buffer_user.c
 * KERNEL VERSION
 * Circular buffer of 20 nodes that hold 1024 byte
@@ -24,22 +24,23 @@ struct semaphore empty_count;
  * Initializes buffer.
  */
 SYSCALL_DEFINE0(init_buffer_421) {
-	// Ensure we're not initializing a buffer that already exists.
+	// Create the root node.
+	node_421_t* node;
+	node_421_t* curr;
+	int i;
+
+	// Cannot initialize already initialized buffer
 	if (buffer.read || buffer.write) {
 		printk("init_buffer_421(): Buffer already exists. Aborting.\n");
 		return -1;
 	}
 
-	// Create the root node.
-	node_421_t* node;
-	node = (node_421_t*)kmalloc(sizeof(node_421_t));
+	node = (node_421_t*)kmalloc(sizeof(node_421_t), GFP_KERNEL);
 	// Create the rest of the nodes, linking them all together.
-	node_421_t* curr;
-	int i;
 	curr = node;
 	// Note that we've already created one node, so i = 1.
 	for (i = 1; i < SIZE_OF_BUFFER; i++) {
-		curr->next = (node_421_t*)kmalloc(sizeof(node_421_t));
+		curr->next = (node_421_t*)kmalloc(sizeof(node_421_t), GFP_KERNEL);
 		curr = curr->next;
 	}
 	// Complete the chain.
@@ -61,6 +62,7 @@ SYSCALL_DEFINE0(init_buffer_421) {
  * @param[in] data char* to be enqueued
  */
 SYSCALL_DEFINE1(enqueue_buffer_421, char*, data) {
+	// Cannot enqueue uninitialized buffer
 	if (!buffer.write) {
 		printk("enqueue_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
@@ -93,7 +95,7 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
 	node_421_t* curr;
 	node_421_t* prev;
 
-	// Empty buffer condition
+	// Cannot dequeue uninitialized buffer
 	if (!buffer.write) {
 		printk("dequeue_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
@@ -126,25 +128,35 @@ SYSCALL_DEFINE1(dequeue_buffer_421, char*, data) {
  * Deallocates buffer.
  */
 SYSCALL_DEFINE0(delete_buffer_421) {
+	// Get rid of all existing nodes.
+	node_421_t* temp;
+	node_421_t* curr;
+
+	// Cannot delete uninitialized buffer
 	if (!buffer.read) {
 		printk("delete_buffer_421(): The buffer does not exist. Aborting.\n");
 		return -1;
 	}
-	// Get rid of all existing nodes.
-	node_421_t* temp;
-	node_421_t* current = buffer.read->next;
-	while (current != buffer.read) {
-		temp = current->next;
-		kfree(current);
-		current = temp;
+	
+	curr = buffer.read->next;
+	while (curr != buffer.read) {
+		temp = curr->next;
+		kfree(curr);
+		curr = temp;
 	}
 	// Free the final node.
-	kfree(current);
-	current = NULL;
+	kfree(curr);
+	curr = NULL;
 	// Reset the buffer.
 	buffer.read = NULL;
 	buffer.write = NULL;
 	buffer.length = 0;
+
+	// Delete semaphores
+	sema_destroy(&mutex);
+	sema_destroy(&fill_count);
+	sema_destroy(&empty_count);
+
 	return 0;
 }
 
@@ -153,17 +165,27 @@ SYSCALL_DEFINE0(delete_buffer_421) {
  */
 SYSCALL_DEFINE0(print_buffer_421) {
 	int i = 0;
-	node_421_t* curr = buffer.read;
-	printf("\nPRINT_QUEUE(): CURRENT BUFFER\n");
+	node_421_t* curr;
+
+	// Cannot print uninitialized buffer
+	if (!buffer.read) {
+		printk("print_buffer_421(): The buffer does not exist. Aborting.\n");
+		return -1;
+	}
+
+	// Prints queue
+	printk("\nPRINT_QUEUE(): CURRENT BUFFER\n");
 	while (curr->next != buffer.read) {
 		if (i < buffer.length) {
-			printf("[%.1s]  ", curr->data);
+			printk("[%.1s]  ", curr->data);
 		}
 		else {
-			printf("[ ]  ");
+			printk("[ ]  ");
 		}
 		curr = curr->next;
 		i++;
 	}
-	printf("\n");
+	printk("\n");
+
+	return 0;
 }

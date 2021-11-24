@@ -1,5 +1,5 @@
 /*
-* @author Rafael Li, rafaell1@umbc.edu
+* @authors Rafael Li, rafaell1@umbc.edu and Kelly Snyder, ks16@umbc.edu
 * @buffer_util.h
 * USER VERSION
 * Header for utility functions in user space testing.

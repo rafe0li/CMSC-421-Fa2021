@@ -1,5 +1,5 @@
 /*
-* @author Rafael Li, rafaell1@umbc.edu
+* @authors Rafael Li, rafaell1@umbc.edu and Kelly Snyder, ks16@umbc.edu
 * @buffer.h
 * KERNEL VERSION
 * UNEDITED

@@ -1,5 +1,5 @@
 /*
-* @author Rafael Li, rafaell1@umbc.edu
+* @authors Rafael Li, rafaell1@umbc.edu and Kelly Snyder, ks16@umbc.edu
 * @test.c
 * USER VERSION
 * Process which runs two threads, a producer and

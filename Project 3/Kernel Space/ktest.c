@@ -1,5 +1,5 @@
 /*
-* @author Rafael Li, rafaell1@umbc.edu
+* @authors Rafael Li, rafaell1@umbc.edu and Kelly Snyder, ks16@umbc.edu
 * @test.c
 * KERNEL VERSION
 * Process which runs two threads, a producer and
@@ -13,7 +13,8 @@
 *
 */
 #include <stdio.h>
-#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include <pthread.h>
 #include <linux/kernel.h>
 #include <sys/syscall.h>
@@ -25,6 +26,8 @@
 #define __NR_delete_buffer_421 445
 #define __NR_print_buffer_421 446
 
+int DATA_LENGTH = 1024;
+
 long sys_init_buffer_421(void) {
 	return syscall(__NR_init_buffer_421);
 }
@@ -33,8 +36,8 @@ long sys_enqueue_buffer_421(char* arg) {
 	return syscall(__NR_enqueue_buffer_421, arg);
 }
 
-long sys_dequeue_buffer_421(void) {
-	return syscall(__NR_dequeue_buffer_421);
+long sys_dequeue_buffer_421(char* arg) {
+	return syscall(__NR_dequeue_buffer_421, arg);
 }
 
 long sys_delete_buffer_421(void) {
@@ -69,7 +72,7 @@ void* produce(void* arg) {
 
 		// Enqueue and increment input value
 		printf("\n:: Enqueueing element into buffer. ::");
-		call = sys_enqueue_buffer_421(1);
+		call = sys_enqueue_buffer_421(block);
 		if (call < 0) {
 			perror("ERROR WITH ENQUEUEING");
 		}
@@ -83,7 +86,7 @@ void* produce(void* arg) {
 		printf("\n%.10s...", block);
 
 		// Print buffer result and free temp block
-		call = sys_print_buffer_421(1);
+		call = sys_print_buffer_421();
 		if (call < 0) {
 			perror("ERROR WITH PRINTING");
 		}
@@ -111,7 +114,7 @@ void* consume(void* arg) {
 
 		// Dequeues and consumes data block
 		printf("\n:: Dequeueing element from buffer. ::");
-		call = sys_dequeue_buffer_421(1);
+		call = sys_dequeue_buffer_421(block);
 		if (call < 0) {
 			perror("ERROR WITH DEQUEUEING");
 		}
@@ -122,7 +125,7 @@ void* consume(void* arg) {
 		free(block);
 
 		// Print buffer result
-		call = sys_print_buffer_421(1);
+		call = sys_print_buffer_421();
 		if (call < 0) {
 			perror("ERROR WITH PRINTING");
 		}
@@ -136,13 +139,31 @@ void* consume(void* arg) {
  * Runs two separate producer/consumer threads.
 */
 int main(void) {
-	init_buffer_421();
+	long call;
+	// Initialize buffer
+	call = sys_init_buffer_421();
+	if (call < 0) {
+		perror("ERROR WITH INITIALIZING");
+	}
+	else {
+		printf("init_buffer ran successfully, check dmesg output\n");
+	}
+
 	pthread_t t1, t2;
 	pthread_create(&t1, NULL, produce, NULL);
 	sleep(4);
 	pthread_create(&t2, NULL, consume, NULL);
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
-	delete_buffer_421();
+
+	// Delete buffer
+	call = sys_delete_buffer_421();
+	if (call < 0) {
+		perror("ERROR WITH DELETING");
+	}
+	else {
+		printf("delete_buffer ran successfully, check dmesg output\n");
+	}
+
 	return 0;
 }
