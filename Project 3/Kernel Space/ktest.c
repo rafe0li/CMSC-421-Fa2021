@@ -14,8 +14,35 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <linux/kernel.h>
+#include <sys/syscall.h>
 #include "test.h"
-#include "buffer_user.c"
+
+#define __NR_init_buffer_421 442
+#define __NR_enqueue_buffer_421 443
+#define __NR_dequeue_buffer_421 444
+#define __NR_delete_buffer_421 445
+#define __NR_print_buffer_421 446
+
+long sys_init_buffer_421(void) {
+	return syscall(__NR_init_buffer_421);
+}
+
+long sys_enqueue_buffer_421(char* arg) {
+	return syscall(__NR_enqueue_buffer_421, arg);
+}
+
+long sys_dequeue_buffer_421(void) {
+	return syscall(__NR_dequeue_buffer_421);
+}
+
+long sys_delete_buffer_421(void) {
+	return syscall(__NR_delete_buffer_421);
+}
+
+long sys_print_buffer_421(void) {
+	return syscall(__NR_print_buffer_421);
+}
 
 // Only modified by producer
 // Input values for data blocks
