@@ -77,9 +77,6 @@ long enqueue_buffer_421(char * data) {
 	buffer.write = buffer.write->next;
 	buffer.length++;
 
-	// Print buffer
-	print_buffer_421();
-
 	// Unlocks buffer and signals dequeue
 	sem_post(&mutex);
 	sem_post(&fill_count);
