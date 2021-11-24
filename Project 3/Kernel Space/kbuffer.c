@@ -16,9 +16,9 @@
 #include "buffer_util.h"
 
 static ring_buffer_421_t buffer;
-struct semaphore mutex;
-struct semaphore fill_count;
-struct semaphore empty_count;
+static struct semaphore mutex;
+static struct semaphore fill_count;
+static struct semaphore empty_count;
 
 /*
  * Initializes buffer.

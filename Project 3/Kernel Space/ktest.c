@@ -59,7 +59,7 @@ int CURR_VAL = 0;
 void* produce(void* arg) {
 	int i;
 	long call;
-	for (i = 0; i < 100000; i++) {
+	for (i = 0; i < 30; i++) {
 		unsigned int stop;
 		// Create temp 1024 byte char block to enqueue
 		char val = CURR_VAL + '0';
@@ -104,7 +104,7 @@ void* produce(void* arg) {
 void* consume(void* arg) {
 	int i;
 	long call;
-	for (i = 0; i < 100000; i++) {
+	for (i = 0; i < 30; i++) {
 		unsigned int stop;
 		char* block = (char*)malloc(sizeof(char) * DATA_LENGTH);
 
